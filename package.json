@@ -1,6 +1,6 @@
 {
-  "name": "ark-wallet-mpc",
-  "version": "1.0.0",
+  "name": "@arklabs/wallet-mcp",
+  "version": "0.0.1",
   "description": "",
   "main": "index.js",
   "scripts": {
