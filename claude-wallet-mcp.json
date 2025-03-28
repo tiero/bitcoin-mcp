@@ -3,7 +3,7 @@
         "ark-wallet": {
             "command": "node",
             "args": [
-                "./dist/index.js"
+                "/Users/tiero/projects/arklabs/wallet-mcp/dist/index.js"
             ],
             "description": "A Model Context Protocol server for managing an Ark Bitcoin wallet"
         }

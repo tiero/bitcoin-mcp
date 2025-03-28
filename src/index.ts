@@ -256,6 +256,59 @@ server.tool(
   }
 );
 
+// Add a tool to send Bitcoin
+server.tool(
+  "send_bitcoin",
+  {
+    address: z.string(),
+    amount: z.number().positive(),
+    feeRate: z.number().positive().optional(),
+    zeroFee: z.boolean().optional()
+  },
+  async ({ address, amount, feeRate, zeroFee }) => {
+    const keyData = loadKeyFromDisk();
+    
+    if (!keyData || !walletState.initialized) {
+      return {
+        content: [{ 
+          type: "text", 
+          text: "No wallet has been initialized yet. Use the setup_wallet tool to create or restore a wallet." 
+        }],
+      };
+    }
+    
+    try {
+      // Update last accessed timestamp
+      walletState.lastAccessed = Date.now();
+      saveWalletState(walletState);
+      
+      const wallet = await initializeWallet(walletState.network);
+      
+      // Send the transaction
+      const txid = await wallet.sendBitcoin({ address, amount });
+      
+      return {
+        content: [{ 
+          type: "text", 
+          text: `Transaction sent successfully!\n\n` +
+                `Transaction ID: ${txid}\n` +
+                `Amount: ${amount} satoshis\n` +
+                `To: ${address}\n` +
+                `Fee Rate: ${feeRate ? `${feeRate} sats/vbyte` : 'Default'}\n` +
+                `Zero Fee: ${zeroFee ? 'Yes' : 'No'}`
+        }],
+      };
+    } catch (error) {
+      return {
+        content: [{ 
+          type: "text", 
+          text: `Error sending transaction: ${error instanceof Error ? error.message : String(error)}` 
+        }],
+      };
+    }
+  }
+);
+
 // For debugging
 console.error("Starting server in directory:", process.cwd());
 
