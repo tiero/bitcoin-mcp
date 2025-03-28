@@ -1,17 +1,25 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "strict": true,
-    "outDir": "dist",
-    "rootDir": "src",
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "typeRoots": ["./node_modules/@types", "./src/types"],
-    "resolveJsonModule": true
+      "target": "es2020",
+      "module": "esnext",
+      "moduleResolution": "node",
+      "declaration": true,
+      "declarationDir": "./dist/types",
+      "outDir": "./dist",
+      "strict": true,
+      "esModuleInterop": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "resolveJsonModule": true,
+      "isolatedModules": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "__tests__"]
+  "include": [
+      "src"
+  ],
+  "exclude": [
+      "node_modules",
+      "dist",
+      "**/*.test.ts",
+      "examples"
+  ]
 }
-
