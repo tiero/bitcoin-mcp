@@ -2,8 +2,7 @@
   "name": "@arklabs/wallet-mcp",
   "version": "0.0.1",
   "description": "",
-  "main": "index.js",
-  "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",

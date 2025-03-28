@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { initializeWallet, loadKeyFromDisk, saveKeyToDisk, generateNewKey, type KeyData } from './wallet';
+import { initializeWallet, loadKeyFromDisk, saveKeyToDisk, generateNewKey, type KeyData } from './wallet.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -230,4 +230,14 @@ server.tool(
 
 // Set up the transport
 const transport = new StdioServerTransport();
-await server.connect(transport);
+
+// Wrap the await in an async function
+async function startServer() {
+  await server.connect(transport);
+}
+
+// Call the function
+startServer().catch(error => {
+  console.error("Failed to start server:", error);
+  process.exit(1);
+});
