@@ -1,60 +1,11 @@
 {
-  "name": "Ark Wallet MCP",
-  "description": "A self-custodial Bitcoin wallet with Ark integration",
-  "command": "node dist/index.js",
-  "capabilities": {
-    "tools": [
-      {
-        "name": "setup_wallet",
-        "description": "Create a new wallet or restore an existing one using a private key",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "action": {
-              "type": "string",
-              "enum": ["create", "restore"],
-              "description": "Whether to create a new wallet or restore from a private key"
-            },
-            "privateKey": {
-              "type": "string",
-              "description": "Private key in hex format (required for restore)"
-            },
-            "network": {
-              "type": "string",
-              "enum": ["mutinynet", "mainnet", "testnet"],
-              "default": "mutinynet",
-              "description": "Bitcoin network to use"
-            },
-            "arkServerUrl": {
-              "type": "string",
-              "format": "url",
-              "description": "Optional custom Ark server URL"
-            },
-            "esploraUrl": {
-              "type": "string", 
-              "format": "url",
-              "description": "Optional custom Electrum server URL"
-            }
-          },
-          "required": ["action"]
+    "mcpServers": {
+        "ark-wallet": {
+            "command": "node",
+            "args": [
+                "./dist/index.js"
+            ],
+            "description": "A Model Context Protocol server for managing an Ark Bitcoin wallet"
         }
-      },
-      {
-        "name": "get_wallet_status",
-        "description": "Check if a wallet is initialized and get its status",
-        "parameters": {
-          "type": "object",
-          "properties": {}
-        }
-      },
-      {
-        "name": "get_addresses",
-        "description": "Get all addresses associated with the wallet",
-        "parameters": {
-          "type": "object",
-          "properties": {}
-        }
-      }
-    ]
+    }
   }
-} 

@@ -5,13 +5,33 @@ import { initializeWallet, loadKeyFromDisk, saveKeyToDisk, generateNewKey, type 
 import path from 'path';
 import fs from 'fs';
 
-// Define the data directory for storing wallet state
-const DATA_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '.', '.ark-wallet-mcp');
+// Define the data directory for storing wallet state with absolute path
+const DATA_DIR = path.resolve(path.join(
+  process.env.HOME || process.env.USERPROFILE || process.cwd(),
+  '.ark-wallet-mcp'
+));
 const WALLET_STATE_PATH = path.join(DATA_DIR, 'wallet-state.json');
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    console.error(`Created data directory at: ${DATA_DIR}`);
+  } catch (error) {
+    console.error(`Failed to create data directory at ${DATA_DIR}:`, error);
+    // Fallback to current working directory if home directory isn't accessible
+    const fallbackDir = path.resolve('.ark-wallet-mcp');
+    console.error(`Attempting to use fallback directory: ${fallbackDir}`);
+    
+    if (!fs.existsSync(fallbackDir)) {
+      fs.mkdirSync(fallbackDir, { recursive: true });
+    }
+    // Redefine the constants with the fallback path
+    Object.defineProperty(global, 'DATA_DIR', { value: fallbackDir });
+    Object.defineProperty(global, 'WALLET_STATE_PATH', { 
+      value: path.join(fallbackDir, 'wallet-state.json') 
+    });
+  }
 }
 
 // Interface for wallet state
@@ -207,14 +227,22 @@ server.tool(
       const wallet = await initializeWallet(walletState.network);
       const addresses = await wallet.getAddress();
       
+      // Fix: Ensure all address values are strings
+      const formattedAddresses = {
+        onchain: String(addresses.onchain),
+        offchain: String(addresses.offchain),
+        boarding: String(addresses.boarding),
+        bip21: String(addresses.bip21)
+      };
+      
       return {
         content: [{ 
           type: "text", 
           text: `Wallet Addresses:\n\n` +
-                `Bitcoin Address: ${addresses.onchain}\n` +
-                `Ark Address: ${addresses.offchain}\n` +
-                `Boarding Address: ${addresses.boarding}\n` +
-                `BIP21 URI: ${addresses.bip21}`
+                `Bitcoin Address: ${formattedAddresses.onchain}\n` +
+                `Ark Address: ${formattedAddresses.offchain}\n` +
+                `Boarding Address: ${formattedAddresses.boarding}\n` +
+                `BIP21 URI: ${formattedAddresses.bip21}`
         }],
       };
     } catch (error) {
@@ -228,7 +256,10 @@ server.tool(
   }
 );
 
-// Set up the transport
+// For debugging
+console.error("Starting server in directory:", process.cwd());
+
+// Keep this clean for MCP communication
 const transport = new StdioServerTransport();
 
 // Wrap the await in an async function
