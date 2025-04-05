@@ -2,68 +2,26 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { initializeWallet, loadKeyFromDisk, saveKeyToDisk, generateNewKey, type KeyData } from './wallet.js';
+import { ensureDataDirectory, getWalletState, saveWalletState } from './state';
 import path from 'path';
 import fs from 'fs';
 
-// Define the data directory for storing wallet state with absolute path
-const DATA_DIR = path.resolve(path.join(
-  process.env.HOME || process.env.USERPROFILE || process.cwd(),
-  '.ark-wallet-mcp'
-));
-const WALLET_STATE_PATH = path.join(DATA_DIR, 'wallet-state.json');
-
 // Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    console.error(`Created data directory at: ${DATA_DIR}`);
-  } catch (error) {
-    console.error(`Failed to create data directory at ${DATA_DIR}:`, error);
-    // Fallback to current working directory if home directory isn't accessible
-    const fallbackDir = path.resolve('.ark-wallet-mcp');
-    console.error(`Attempting to use fallback directory: ${fallbackDir}`);
-    
-    if (!fs.existsSync(fallbackDir)) {
-      fs.mkdirSync(fallbackDir, { recursive: true });
-    }
-    // Redefine the constants with the fallback path
-    Object.defineProperty(global, 'DATA_DIR', { value: fallbackDir });
-    Object.defineProperty(global, 'WALLET_STATE_PATH', { 
-      value: path.join(fallbackDir, 'wallet-state.json') 
-    });
-  }
-}
+ensureDataDirectory();
 
-// Interface for wallet state
-interface WalletState {
-  initialized: boolean;
-  network: string;
-  createdAt: number;
-  lastAccessed?: number;
-}
+// Get current wallet state
+let walletState = getWalletState();
 
-// Initialize or load wallet state
-function getWalletState(): WalletState {
-  if (fs.existsSync(WALLET_STATE_PATH)) {
-    try {
-      const data = fs.readFileSync(WALLET_STATE_PATH, 'utf-8');
-      return JSON.parse(data);
-    } catch (error) {
-      console.error('Error loading wallet state:', error);
-    }
-  }
-  
-  // Default state if not found or error
-  return {
-    initialized: false,
-    network: 'mutinynet',
-    createdAt: Date.now()
+// Automatically create wallet if not initialized
+if (!walletState.initialized) {
+  const wallet = await initializeWallet(walletState.network);
+  walletState = {
+    initialized: true,
+    network: walletState.network,
+    createdAt: Date.now(),
+    lastAccessed: Date.now(),
   };
-}
-
-// Save wallet state
-function saveWalletState(state: WalletState): void {
-  fs.writeFileSync(WALLET_STATE_PATH, JSON.stringify(state, null, 2));
+  saveWalletState(walletState);
 }
 
 // Initialize the Ark Wallet MCP server
@@ -71,9 +29,6 @@ const server = new McpServer({
   name: "Ark Wallet MPC",
   version: "0.0.1",
 });
-
-// Get current wallet state
-let walletState = getWalletState();
 
 // Set up a wallet tool that handles both creation and restoration
 server.tool(

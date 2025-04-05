@@ -4,14 +4,13 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import { randomBytes } from 'crypto';
+import { ensureDataDirectory } from './state';
 
 // Define the data directory for storing keys
 const DATA_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '.', '.ark-wallet-mcp');
 
 // Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
+ensureDataDirectory();
 
 const KEY_PATH = path.join(DATA_DIR, 'bitcoin-ark-wallet-key.json');
 
@@ -90,4 +89,4 @@ export async function initializeWallet(
 }
 
 // Export the KeyData type for use in other modules
-export type { KeyData }; 
+export type { KeyData };
