@@ -1,7 +1,7 @@
 {
-  "name": "@arklabs/wallet-mcp",
+  "name": "bitcoin-mcp",
   "version": "0.0.1",
-  "description": "",
+  "description": "Bitcoin wallet tools for Model Context Protocol",
   "main": "dist/index.js",
   "type": "module",
   "engines": {
@@ -15,9 +15,14 @@
     "test:watch": "vitest",
     "build:test": "tsc && vitest run"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "bitcoin",
+    "wallet",
+    "mcp",
+    "ark"
+  ],
+  "author": "tiero",
+  "license": "MIT",
   "dependencies": {
     "@arklabs/wallet-sdk": "^0.0.10",
     "@modelcontextprotocol/sdk": "^1.8.0",
