@@ -41,7 +41,7 @@ export const tool = {
               '\n```\n\n' +
               '**Offchain Address**\n' +
               '```\n' +
-              addresses.offchain +
+              addresses.offchain?.address +
               '\n```',
           },
           {
