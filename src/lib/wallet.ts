@@ -52,20 +52,14 @@ export function loadKeyFromDisk(): KeyData | null {
   }
 
   try {
-    const data = fs.readFileSync(KEY_PATH, 'utf-8');
-    const parsed = JSON.parse(data);
-    // Validate the loaded data against our schema
-    const validatedData = KeyDataSchema.parse(parsed);
-    return validatedData;
+    const jsonString = fs.readFileSync(KEY_PATH, 'utf-8');
+    const data = JSON.parse(jsonString);
+    return KeyDataSchema.parse(data);
   } catch (error) {
     console.error('Error loading key:', error);
-    // If the file exists but is invalid, delete it to prevent future errors
-    try {
-      fs.unlinkSync(KEY_PATH);
-    } catch (unlinkError) {
-      console.error('Error deleting invalid key file:', unlinkError);
-    }
-    return null;
+    throw new Error(
+      `Failed to load key: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -92,9 +86,8 @@ export async function initializeWallet(
     network: network as any,
     identity,
     esploraUrl: 'https://mutinynet.com/api',
-    arkServerUrl: 'https://mutinynet.arkade.sh',
-    arkServerPublicKey:
-      'fa73c6e4876ffb2dfc961d763cca9abc73d4b88efcb8f5e7ff92dc55e9aa553d',
+    arkServerUrl: 'https://master.mutinynet.arklabs.to',
+    arkServerPublicKey: 'd45fc69d4ff1f45cbba36ab1037261863c3a49c4910bc183ae975247358920b6'
   });
 
   return wallet;

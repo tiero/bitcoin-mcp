@@ -6,14 +6,14 @@ import { getWalletState } from '../lib/state.js';
 // Schema for send_bitcoin command
 export const schema = z.object({
   address: z.string(),
-  amount: z.number(),
+  amount: z.number().int().positive(),
   feeRate: z.number().optional(),
 });
 
 // Handler
 const handler: Tool['handler'] = async ({ params }) => {
   try {
-    const { address, amount, feeRate } = params as z.infer<typeof schema>;
+    const { address, amount } = params as z.infer<typeof schema>;
     const walletState = getWalletState();
 
     if (!walletState.initialized) {
@@ -40,13 +40,72 @@ const handler: Tool['handler'] = async ({ params }) => {
     }
 
     const wallet = await initializeWallet(walletState.network);
-    const txid = await wallet.sendBitcoin({ address, amount, feeRate });
+    
+    // Get current balance first
+    const balance = await wallet.getBalance();
+    
+    if (amount === 0) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: 'Amount must be greater than 0',
+          },
+        ],
+        tools: [
+          {
+            name: 'get_balance',
+            description: 'Check current wallet balance',
+          },
+        ],
+      };
+    }
+
+    if (address === '') {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: 'Address cannot be empty',
+          },
+        ],
+        tools: [
+          {
+            name: 'get_address',
+            description: 'Get your Bitcoin wallet addresses',
+          },
+        ],
+      };
+    }
+
+    if (balance.onchain.total + balance.offchain.total < amount) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Insufficient funds. Available balance: ${balance.onchain.total + balance.offchain.total} sats`,
+          },
+        ],
+        tools: [
+          {
+            name: 'get_balance',
+            description: 'Check current wallet balance',
+          },
+        ],
+      };
+    }
+
+    // Send bitcoin (amount in satoshis)
+    const txid = await wallet.sendBitcoin({
+      address,
+      amount,
+    }, true);
 
     return {
       content: [
         {
           type: 'text',
-          text: `Successfully sent ${amount} BTC to ${address}\nTransaction ID: ${txid}`,
+          text: `Successfully sent ${amount} sats to ${address}\nTransaction ID: ${txid}`,
         },
       ],
       tools: [
