@@ -37,8 +37,15 @@ export function generateNewKey(): string {
 
 // Function to save key data to disk
 export function saveKeyToDisk(keyData: KeyData): void {
-  fs.writeFileSync(KEY_PATH, JSON.stringify(keyData, null, 2));
-  console.log(`Key saved to ${KEY_PATH}`);
+  try {
+    // Validate key data before saving
+    const validatedData = KeyDataSchema.parse(keyData);
+    const jsonString = JSON.stringify(validatedData, null, 2);
+    fs.writeFileSync(KEY_PATH, jsonString, 'utf-8');
+  } catch (error) {
+    console.error('Error saving key:', error);
+    throw new Error(`Failed to save key: ${error instanceof Error ? error.message : String(error)}`);
+  }
 }
 
 // Function to load key data from disk
@@ -50,9 +57,17 @@ export function loadKeyFromDisk(): KeyData | null {
   try {
     const data = fs.readFileSync(KEY_PATH, 'utf-8');
     const parsed = JSON.parse(data);
-    return KeyDataSchema.parse(parsed);
+    // Validate the loaded data against our schema
+    const validatedData = KeyDataSchema.parse(parsed);
+    return validatedData;
   } catch (error) {
     console.error('Error loading key:', error);
+    // If the file exists but is invalid, delete it to prevent future errors
+    try {
+      fs.unlinkSync(KEY_PATH);
+    } catch (unlinkError) {
+      console.error('Error deleting invalid key file:', unlinkError);
+    }
     return null;
   }
 }

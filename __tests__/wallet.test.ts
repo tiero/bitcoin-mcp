@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { generateNewKey, loadKeyFromDisk, saveKeyToDisk } from '../src/wallet';
+import { initializeWallet, loadKeyFromDisk, saveKeyToDisk, generateNewKey } from '../src/lib/wallet.js';
 import fs from 'fs';
 import path from 'path';
 
@@ -70,7 +70,8 @@ describe('Wallet Functions', () => {
       // Should call writeFileSync with the correct parameters
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         expect.any(String),
-        JSON.stringify(mockKeyData, null, 2)
+        JSON.stringify(mockKeyData, null, 2),
+        'utf-8'
       );
     });
   });

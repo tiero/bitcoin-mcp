@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ensureDataDirectory, getWalletState, saveWalletState } from '../src/state';
+import { ensureDataDirectory, getWalletState, saveWalletState } from '../src/lib/state.js';
 import fs from 'fs';
 import path from 'path';
 
