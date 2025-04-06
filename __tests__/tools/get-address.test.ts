@@ -7,11 +7,11 @@ import type { ToolResponse, Tool } from '../../src/tools/types.js';
 
 // Mock the modules
 vi.mock('../../src/lib/wallet.js', () => ({
-  initializeWallet: vi.fn()
+  initializeWallet: vi.fn(),
 }));
 
 vi.mock('../../src/lib/state.js', () => ({
-  getWalletState: vi.fn()
+  getWalletState: vi.fn(),
 }));
 
 describe('get-address tool', () => {
@@ -24,24 +24,24 @@ describe('get-address tool', () => {
     vi.mocked(state.getWalletState).mockReturnValue({
       initialized: true,
       network: 'mutinynet',
-      createdAt: Date.now()
+      createdAt: Date.now(),
     } satisfies WalletState);
 
     // Mock wallet addresses
     const mockAddresses = {
       onchain: 'bc1qxxx',
-      offchain: 'lnxxx'
+      offchain: 'lnxxx',
     };
-    
+
     vi.mocked(wallet.initializeWallet).mockResolvedValue({
-      getAddress: () => Promise.resolve(mockAddresses)
+      getAddress: () => Promise.resolve(mockAddresses),
     } as any);
 
-    const result = await tool.handler() as ToolResponse;
+    const result = (await tool.handler()) as ToolResponse;
 
     // Check response format
     expect(result.content).toHaveLength(2);
-    
+
     // Check text content
     const textContent = result.content[0];
     expect(textContent.type).toBe('text');
@@ -53,7 +53,9 @@ describe('get-address tool', () => {
     expect(resourceContent.type).toBe('resource');
     if (resourceContent.type === 'resource') {
       expect(resourceContent.resource.uri).toBe('bitcoin://address');
-      expect(JSON.parse(resourceContent.resource.text as string)).toEqual(mockAddresses);
+      expect(JSON.parse(resourceContent.resource.text as string)).toEqual(
+        mockAddresses
+      );
       expect(resourceContent.resource.mimeType).toBe('application/json');
     }
   });
@@ -63,16 +65,16 @@ describe('get-address tool', () => {
     vi.mocked(state.getWalletState).mockReturnValue({
       initialized: false,
       network: 'mutinynet',
-      createdAt: Date.now()
+      createdAt: Date.now(),
     } satisfies WalletState);
 
-    const result = await tool.handler() as ToolResponse;
+    const result = (await tool.handler()) as ToolResponse;
 
     // Check response format
     expect(result.content).toHaveLength(1);
     expect(result.content[0].type).toBe('text');
-    expect(result.content[0].text).toContain('haven\'t set up a wallet yet');
-    
+    expect(result.content[0].text).toContain("haven't set up a wallet yet");
+
     // Check suggested tool
     expect(result.tools).toBeDefined();
     if (result.tools) {
@@ -86,19 +88,21 @@ describe('get-address tool', () => {
     vi.mocked(state.getWalletState).mockReturnValue({
       initialized: true,
       network: 'mutinynet',
-      createdAt: Date.now()
+      createdAt: Date.now(),
     } satisfies WalletState);
 
     vi.mocked(wallet.initializeWallet).mockResolvedValue({
-      getAddress: () => Promise.reject(new Error('Test error'))
+      getAddress: () => Promise.reject(new Error('Test error')),
     } as any);
 
-    const result = await tool.handler() as ToolResponse;
+    const result = (await tool.handler()) as ToolResponse;
 
     // Check error response
     expect(result.content).toHaveLength(1);
     expect(result.content[0].type).toBe('text');
-    expect(result.content[0].text).toContain('Error getting Bitcoin wallet addresses');
+    expect(result.content[0].text).toContain(
+      'Error getting Bitcoin wallet addresses'
+    );
     expect(result.content[0].text).toContain('Test error');
 
     // Check suggested tool and resource

@@ -8,15 +8,15 @@ import type { ToolResponse } from '../../src/tools/types.js';
 
 // Mock the modules
 vi.mock('../../src/lib/wallet.js', () => ({
-  initializeWallet: vi.fn()
+  initializeWallet: vi.fn(),
 }));
 
 vi.mock('../../src/lib/state.js', () => ({
-  getWalletState: vi.fn()
+  getWalletState: vi.fn(),
 }));
 
 vi.mock('../../src/tools/balance.js', () => ({
-  getBalance: vi.fn()
+  getBalance: vi.fn(),
 }));
 
 describe('get-balance tool', () => {
@@ -29,7 +29,7 @@ describe('get-balance tool', () => {
     vi.mocked(state.getWalletState).mockReturnValue({
       initialized: true,
       network: 'mutinynet',
-      createdAt: Date.now()
+      createdAt: Date.now(),
     } satisfies WalletState);
 
     // Mock balance response
@@ -39,19 +39,19 @@ describe('get-balance tool', () => {
       total: 0.8,
       fiat: {
         usd: 40000,
-        timestamp: Date.now()
-      }
+        timestamp: Date.now(),
+      },
     };
-    
+
     vi.mocked(wallet.initializeWallet).mockResolvedValue({} as any);
     vi.mocked(balance.getBalance).mockResolvedValue(mockBalance);
 
-    const result = await tool.handler({}) as ToolResponse;
+    const result = (await tool.handler({})) as ToolResponse;
 
     // Check response format
     expect(result.content).toHaveLength(1);
     expect(result.content[0].type).toBe('text');
-    
+
     const responseText = result.content[0].text;
     expect(responseText).toContain('0.50000000 BTC');
     expect(responseText).toContain('0.30000000 BTC');
@@ -64,20 +64,20 @@ describe('get-balance tool', () => {
     vi.mocked(state.getWalletState).mockReturnValue({
       initialized: true,
       network: 'mutinynet',
-      createdAt: Date.now()
+      createdAt: Date.now(),
     } satisfies WalletState);
 
     // Mock balance response without fiat
     const mockBalance = {
       onchain: 1.0,
       offchain: 0.5,
-      total: 1.5
+      total: 1.5,
     };
-    
+
     vi.mocked(wallet.initializeWallet).mockResolvedValue({} as any);
     vi.mocked(balance.getBalance).mockResolvedValue(mockBalance);
 
-    const result = await tool.handler({}) as ToolResponse;
+    const result = (await tool.handler({})) as ToolResponse;
 
     // Check response format
     const responseText = result.content[0].text;
@@ -92,16 +92,16 @@ describe('get-balance tool', () => {
     vi.mocked(state.getWalletState).mockReturnValue({
       initialized: false,
       network: 'mutinynet',
-      createdAt: Date.now()
+      createdAt: Date.now(),
     } satisfies WalletState);
 
-    const result = await tool.handler({}) as ToolResponse;
+    const result = (await tool.handler({})) as ToolResponse;
 
     // Check response format
     expect(result.content).toHaveLength(1);
     expect(result.content[0].type).toBe('text');
-    expect(result.content[0].text).toContain('haven\'t set up a wallet yet');
-    
+    expect(result.content[0].text).toContain("haven't set up a wallet yet");
+
     // Check suggested tool
     expect(result.tools).toBeDefined();
     if (result.tools) {
@@ -115,18 +115,20 @@ describe('get-balance tool', () => {
     vi.mocked(state.getWalletState).mockReturnValue({
       initialized: true,
       network: 'mutinynet',
-      createdAt: Date.now()
+      createdAt: Date.now(),
     } satisfies WalletState);
 
     vi.mocked(wallet.initializeWallet).mockResolvedValue({} as any);
     vi.mocked(balance.getBalance).mockRejectedValue(new Error('Test error'));
 
-    const result = await tool.handler({}) as ToolResponse;
+    const result = (await tool.handler({})) as ToolResponse;
 
     // Check error response
     expect(result.content).toHaveLength(1);
     expect(result.content[0].type).toBe('text');
-    expect(result.content[0].text).toContain('Error getting Bitcoin wallet balance');
+    expect(result.content[0].text).toContain(
+      'Error getting Bitcoin wallet balance'
+    );
     expect(result.content[0].text).toContain('Test error');
 
     // Check suggested tool and resource

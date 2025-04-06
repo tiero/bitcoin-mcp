@@ -48,7 +48,7 @@ export interface WalletResponse {
 
 export function checkWalletExists(): WalletResponse {
   const state = getWalletState();
-  
+
   if (!state.initialized) {
     return {
       success: false,
@@ -56,8 +56,8 @@ export function checkWalletExists(): WalletResponse {
       error: 'Wallet not initialized',
       options: {
         create: 'Create a new wallet',
-        import: 'Import existing wallet'
-      }
+        import: 'Import existing wallet',
+      },
     };
   }
 

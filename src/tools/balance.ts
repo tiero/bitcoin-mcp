@@ -6,10 +6,12 @@ export const BalanceResponseSchema = z.object({
   total: z.number(),
   onchain: z.number(),
   offchain: z.number(),
-  fiat: z.object({
-    usd: z.number(),
-    timestamp: z.number()
-  }).optional()
+  fiat: z
+    .object({
+      usd: z.number(),
+      timestamp: z.number(),
+    })
+    .optional(),
 });
 
 export type BalanceResponse = z.infer<typeof BalanceResponseSchema>;
@@ -28,20 +30,20 @@ export async function fetchBitcoinPrice(): Promise<number | null> {
     if (!response.ok) {
       throw new Error('Price API response not OK');
     }
-    
+
     const data = await response.json();
-    
+
     // Update cache
     priceCache = {
       usd: data.USD.last,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
-    
+
     return priceCache.usd;
   } catch (error) {
     console.error('Error fetching BTC price:', error);
     // Return cached price if within duration
-    if (priceCache && (Date.now() - priceCache.timestamp) < CACHE_DURATION) {
+    if (priceCache && Date.now() - priceCache.timestamp < CACHE_DURATION) {
       return priceCache.usd;
     }
     // Clear cache only if expired or doesn't exist
@@ -60,22 +62,22 @@ export async function getBalance(wallet: Wallet): Promise<BalanceResponse> {
   const offchainBalance = vtxos.reduce((sum, vtxo) => sum + vtxo.value, 0);
 
   const totalBalance = onchainBalance + offchainBalance;
-  
+
   // Base response without fiat
   const response: BalanceResponse = {
     total: totalBalance,
     onchain: onchainBalance,
-    offchain: offchainBalance
+    offchain: offchainBalance,
   };
 
   // Get current BTC/USD price
   const btcPrice = await fetchBitcoinPrice();
-  
+
   // Add fiat information only if price is available
   if (btcPrice !== null && priceCache !== null) {
     response.fiat = {
       usd: (totalBalance / 100_000_000) * btcPrice,
-      timestamp: priceCache.timestamp
+      timestamp: priceCache.timestamp,
     };
   }
 

@@ -1,28 +1,35 @@
 // Response type for MCP tools
 export interface McpResponse {
-  content: Array<{
-    text: string;
-    type: "text";
-  } | {
-    type: "code";
-    text: string;
-    language: string;
-  } | {
-    type: "image";
-    data: string;
-    mimeType: string;
-  } | {
-    type: "resource";
-    resource: {
-      text: string;
-      uri: string;
-      mimeType?: string;
-    } | {
-      uri: string;
-      blob: string;
-      mimeType?: string;
-    };
-  }>;
+  content: Array<
+    | {
+        text: string;
+        type: 'text';
+      }
+    | {
+        type: 'code';
+        text: string;
+        language: string;
+      }
+    | {
+        type: 'image';
+        data: string;
+        mimeType: string;
+      }
+    | {
+        type: 'resource';
+        resource:
+          | {
+              text: string;
+              uri: string;
+              mimeType?: string;
+            }
+          | {
+              uri: string;
+              blob: string;
+              mimeType?: string;
+            };
+      }
+  >;
   tools?: Array<{
     name: string;
     description: string;

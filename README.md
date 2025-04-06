@@ -19,7 +19,9 @@ The Bitcoin MCP server extends any MCP client's capabilities by providing tools 
 ## Available Tools
 
 ### `setup_wallet`
+
 Create or restore a Bitcoin wallet:
+
 ```typescript
 {
   action: "create" | "restore",
@@ -31,16 +33,21 @@ Create or restore a Bitcoin wallet:
 ```
 
 ### `get_wallet_status`
+
 Get the current wallet status and initialization state.
 
 ### `get_addresses`
+
 Get all wallet addresses.
 
 ### `get_balance`
+
 Get wallet balance with optional fiat conversion.
 
 ### `send_bitcoin`
+
 Send Bitcoin to an address:
+
 ```typescript
 {
   address: string,
@@ -52,6 +59,7 @@ Send Bitcoin to an address:
 ## Development
 
 This project uses:
+
 - [pnpm](https://pnpm.io/) - Package manager
 - [Vite](https://vitejs.dev/) - Build system
 - [Vitest](https://vitest.dev/) - Testing framework
@@ -61,16 +69,19 @@ This project uses:
 ### Getting Started
 
 1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Run tests:
+
 ```bash
 pnpm test
 ```
 
 3. Build the project:
+
 ```bash
 pnpm build
 ```
@@ -93,14 +104,16 @@ src/
 
 ## Roadmap
 
-### Phase 1: Core Functionality 
+### Phase 1: Core Functionality
+
 - [x] Setup project structure and tooling
 - [x] Implement Bitcoin price fetching strategy
 - [x] Balance calculation and wallet operations
 - [x] Schema validation with Zod
 - [x] Comprehensive test coverage
 
-### Phase 2: Enhanced Features 
+### Phase 2: Enhanced Features
+
 - [ ] Lightning Network support
 - [ ] Multi-wallet management
 - [ ] Advanced transaction options
@@ -108,6 +121,7 @@ src/
 - [ ] Fee estimation
 
 ### Phase 3: Security & Performance
+
 - [ ] Security audit
 - [ ] Performance optimization
 - [ ] Rate limiting

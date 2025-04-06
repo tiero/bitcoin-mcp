@@ -7,4 +7,4 @@ export default defineConfig({
     include: ['__tests__/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
   },
-}); 
+});

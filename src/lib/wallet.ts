@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 import { InMemoryKey, Wallet } from '@arklabs/wallet-sdk';
 import fs from 'fs';
 import readline from 'readline';
@@ -21,7 +21,7 @@ type KeyData = z.infer<typeof KeyDataSchema>;
 function createInterface() {
   return readline.createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
 }
 
@@ -39,7 +39,9 @@ export function saveKeyToDisk(keyData: KeyData): void {
     fs.writeFileSync(KEY_PATH, jsonString, 'utf-8');
   } catch (error) {
     console.error('Error saving key:', error);
-    throw new Error(`Failed to save key: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `Failed to save key: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -48,7 +50,7 @@ export function loadKeyFromDisk(): KeyData | null {
   if (!fs.existsSync(KEY_PATH)) {
     return null;
   }
-  
+
   try {
     const data = fs.readFileSync(KEY_PATH, 'utf-8');
     const parsed = JSON.parse(data);
@@ -72,27 +74,27 @@ export async function initializeWallet(
   network: string = 'mutinynet'
 ): Promise<Wallet> {
   let keyData = loadKeyFromDisk();
-  
+
   if (!keyData) {
     // Use directly without prompting
     const newPrivateKey = generateNewKey();
     keyData = {
       privateKeyHex: newPrivateKey,
-      createdAt: Date.now()
+      createdAt: Date.now(),
     };
-    
+
     saveKeyToDisk(keyData);
   }
-  
+
   const identity = InMemoryKey.fromHex(keyData.privateKeyHex);
 
-  
   const wallet = await Wallet.create({
     network: network as any,
     identity,
     esploraUrl: 'https://mutinynet.com/api',
     arkServerUrl: 'https://mutinynet.arkade.sh',
-    arkServerPublicKey: 'fa73c6e4876ffb2dfc961d763cca9abc73d4b88efcb8f5e7ff92dc55e9aa553d'
+    arkServerPublicKey:
+      'fa73c6e4876ffb2dfc961d763cca9abc73d4b88efcb8f5e7ff92dc55e9aa553d',
   });
 
   return wallet;

@@ -14,8 +14,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build:test": "tsc && vitest run",
-    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
-    "lint:check": "eslint . --ext .ts,.tsx,.js,.jsx --quiet",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -34,8 +32,6 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.14",
-    "eslint-config-prettier": "^10.1.1",
-    "eslint-plugin-prettier": "^5.2.6",
     "prettier": "^3.5.3",
     "typescript": "^5.8.2",
     "vitest": "^3.0.9"
