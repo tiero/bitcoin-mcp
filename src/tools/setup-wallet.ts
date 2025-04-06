@@ -6,7 +6,7 @@ import { saveWalletState } from '../lib/state.js';
 // Schema for setup_wallet command
 export const schema = z
   .object({
-    network: z.enum(['mutinynet', 'mainnet']).optional(),
+    network: z.enum(['bitcoin', 'testnet', 'signet', 'mutinynet']).optional(),
     privateKey: z.string().optional(),
   })
   .optional();

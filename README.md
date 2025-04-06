@@ -26,7 +26,7 @@ Create or restore a Bitcoin wallet:
 {
   action: "create" | "restore",
   privateKey?: string,
-  network?: "mutinynet" | "mainnet" | "testnet",
+  network?: "bitcoin" | "testnet" | "signet" | "mutinynet",
   arkServerUrl?: string,
   esploraUrl?: string
 }
