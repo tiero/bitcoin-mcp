@@ -21,30 +21,55 @@ export async function handleGetWalletStatus(): Promise<McpResponse> {
       }]
     };
   }
-  
-  return {
-    content: [{ 
-      type: "text", 
-      text: `Wallet is initialized and active.\n` +
-            `Network: ${walletState.network}\n` + 
-            `Created: ${new Date(keyData.createdAt).toLocaleString()}\n` +
-            `Last accessed: ${walletState.lastAccessed ? new Date(walletState.lastAccessed).toLocaleString() : 'Unknown'}`
-    }],
-    tools: [
-      {
-        name: "get_balance",
-        description: "Check wallet balance"
-      },
-      {
-        name: "get_addresses",
-        description: "View wallet addresses"
-      },
-      {
-        name: "send_bitcoin",
-        description: "Send Bitcoin to an address"
-      }
-    ]
-  };
+
+  try {
+    walletState.lastAccessed = Date.now();
+    saveWalletState(walletState);
+    
+    const wallet = await initializeWallet(walletState.network);
+    const addresses = await wallet.getAddress();
+    
+    return {
+      content: [
+        { 
+          type: "text", 
+          text: `Wallet is initialized and active.\n` +
+                `Network: ${walletState.network}\n` + 
+                `Created: ${new Date(keyData.createdAt).toLocaleString()}\n` +
+                `Last accessed: ${walletState.lastAccessed ? new Date(walletState.lastAccessed).toLocaleString() : 'Unknown'}`
+        },
+        {
+          type: "resource",
+          resource: {
+            uri: `bitcoin://addresses`,
+            text: JSON.stringify(addresses, null, 2),
+            mimeType: "application/json"
+          }
+        }
+      ],
+      tools: [
+        {
+          name: "get_balance",
+          description: "Check wallet balance"
+        },
+        {
+          name: "send_bitcoin",
+          description: "Send Bitcoin to an address"
+        }
+      ]
+    };
+  } catch (error) {
+    return {
+      content: [{ 
+        type: "text", 
+        text: `Error getting wallet status: ${error instanceof Error ? error.message : 'Unknown error'}`
+      }],
+      tools: [{
+        name: "setup_wallet",
+        description: "Initialize or restore a wallet"
+      }]
+    };
+  }
 }
 
 export async function handleGetAddresses(): Promise<McpResponse> {

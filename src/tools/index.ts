@@ -7,6 +7,7 @@ import { tool as walletStatusTool } from './wallet-status.js';
 import { tool as setupWalletTool } from './setup-wallet.js';
 import { tool as getBalanceTool } from './get-balance.js';
 import { tool as sendBitcoinTool } from './send-bitcoin.js';
+import { tool as getAddressTool } from './get-address.js';
 
 // Wrap handler with wallet check
 const withWalletCheck = (handler: ToolHandler): ToolHandler => {
@@ -41,7 +42,8 @@ const tools: Tool[] = [
   // Tools that need wallet check
   walletStatusTool,
   getBalanceTool,
-  sendBitcoinTool
+  sendBitcoinTool,
+  getAddressTool
 ];
 
 export const registerTools = (server: McpServer): void => {
