@@ -102,32 +102,6 @@ src/
 └── index.ts     # Server entry point
 ```
 
-## Roadmap
-
-### Phase 1: Core Functionality
-
-- [x] Setup project structure and tooling
-- [x] Implement Bitcoin price fetching strategy
-- [x] Balance calculation and wallet operations
-- [x] Schema validation with Zod
-- [x] Comprehensive test coverage
-
-### Phase 2: Enhanced Features
-
-- [ ] Lightning Network support
-- [ ] Multi-wallet management
-- [ ] Advanced transaction options
-- [ ] UTXO management
-- [ ] Fee estimation
-
-### Phase 3: Security & Performance
-
-- [ ] Security audit
-- [ ] Performance optimization
-- [ ] Rate limiting
-- [ ] Enhanced error handling
-- [ ] Monitoring and logging
-
 ## Contributing
 
 Please follow our development guidelines:
