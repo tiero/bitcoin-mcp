@@ -1,0 +1,37 @@
+# Project Development Guidelines
+
+**Core Tools:**
+
+*   **Build/Dev Server:** [Vite](https://vitejs.dev/)
+*   **Testing:** [Vitest](https://vitest.dev/)
+*   **Package Manager:** [pnpm](https://pnpm.io/)
+
+**Key Principles:**
+
+1.  **Minimal Dependencies:**
+    *   Only add a new dependency if it provides a **significant (10x) improvement** over existing solutions or standard library features.
+    *   Evaluate alternatives and the maintenance overhead before adding anything.
+
+2.  **Focus & Single Responsibility:**
+    *   **Code:** Functions, classes, and modules should do **one thing well**.
+    *   **Tasks:** Focus on completing **one feature or fix** at a time. Avoid mixing unrelated changes in a single commit or PR.
+
+3.  **Consistency:**
+    *   **Formatting:** Use Prettier (configured in `package.json` or `.prettierrc`). Format code before committing.
+    *   **Linting:** Use ESLint (configured in `.eslintrc.js`). Address linting errors.
+    *   **Naming Conventions:** Follow standard TypeScript conventions (camelCase for variables/functions, PascalCase for classes/types/interfaces).
+    *   **File Structure:** Maintain a logical and predictable directory structure.
+
+4.  **Testing:**
+    *   Write unit tests (`*.test.ts`) for core logic using Vitest.
+    *   Aim for meaningful test coverage, focusing on critical paths and edge cases.
+    *   Integration tests should verify interactions between components.
+
+5.  **TypeScript:**
+    *   Use strong typing. Avoid `any` where possible.
+    *   Define clear `interface`s or `type`s for data structures.
+
+6.  **Git Workflow:**
+    *   Use feature branches.
+    *   Write clear, concise commit messages (e.g., `feat: add user authentication`, `fix: resolve login bug`).
+    *   Keep Pull Requests (PRs) focused on a single task. Ensure tests pass before merging.
