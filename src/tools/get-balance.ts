@@ -1,8 +1,63 @@
 import { z } from 'zod';
-import { getBalance, type BalanceResponse } from './balance.js';
-import { Tool, ToolResponse } from './types.js';
+import { Tool } from './types.js';
 import { initializeWallet } from '../lib/wallet.js';
 import { getWalletState } from '../lib/state.js';
+
+// Schema for balance response
+export const BalanceResponseSchema = z.object({
+  total: z.number(),
+  onchain: z.number(),
+  offchain: z.number(),
+  fiat: z
+    .object({
+      usd: z.number(),
+      timestamp: z.number(),
+    })
+    .optional(),
+});
+
+export type BalanceResponse = z.infer<typeof BalanceResponseSchema>;
+
+// Cache for Bitcoin price
+export let priceCache: {
+  usd: number;
+  timestamp: number;
+} | null = null;
+
+const CACHE_DURATION = 60 * 1000; // 1 minute in milliseconds
+
+export async function fetchBitcoinPrice(): Promise<number | null> {
+  try {
+    const response = await fetch('https://blockchain.info/ticker');
+    if (!response.ok) {
+      throw new Error('Price API response not OK');
+    }
+
+    const data = await response.json();
+
+    // Update cache
+    priceCache = {
+      usd: data.USD.last,
+      timestamp: Date.now(),
+    };
+
+    return priceCache.usd;
+  } catch (error) {
+    // Only log errors in production, not in tests
+    if (!process.env.VITEST) {
+      console.error('Error fetching BTC price:', error);
+    }
+    
+    // Return cached price if within duration
+    if (priceCache && Date.now() - priceCache.timestamp < CACHE_DURATION) {
+      return priceCache.usd;
+    }
+
+    // Clear cache and return null
+    priceCache = null;
+    return null;
+  }
+}
 
 // Schema
 export const schema = z
@@ -50,53 +105,24 @@ const handler: Tool['handler'] = async ({ params }) => {
     }
 
     const wallet = await initializeWallet();
-    const balance = await getBalance(wallet);
-
-    const formattedBalance: FormattedBalance = {
-      onchain: {
-        amount: balance.onchain,
-        formatted: `${balance.onchain.toFixed(8)} BTC`,
-      },
-      offchain: {
-        amount: balance.offchain,
-        formatted: `${balance.offchain.toFixed(8)} BTC`,
-      },
-      total: {
-        amount: balance.total,
-        formatted: `${balance.total.toFixed(8)} BTC`,
-      },
+    const coins = await wallet.getCoins();
+    const vtxos = await wallet.getVtxos();
+    const balance: BalanceResponse = {
+      total: coins.reduce((sum: number, coin: { value: number }) => sum + coin.value, 0) + vtxos.reduce((sum: number, vtxo: { value: number }) => sum + vtxo.value, 0),
+      onchain: coins.reduce((sum: number, coin: { value: number }) => sum + coin.value, 0),
+      offchain: vtxos.reduce((sum: number, vtxo: { value: number }) => sum + vtxo.value, 0),
+      fiat: await fetchBitcoinPrice().then((price) => (price ? { usd: price, timestamp: Date.now() } : undefined)),
     };
 
-    if (balance.fiat) {
-      formattedBalance.fiat = {
-        currency: 'USD',
-        rate: balance.fiat.usd,
-        value: balance.total * balance.fiat.usd,
-        timestamp: balance.fiat.timestamp,
-      };
-    }
+    // Convert satoshis to BTC
+    const btcAmount = (balance.total / 100000000).toFixed(8);
+    const fiatStr = balance.fiat ? ` (approximately $${(balance.fiat.usd * balance.total / 100000000).toFixed(2)} USD)` : '';
 
     return {
       content: [
         {
           type: 'text',
-          text:
-            'Here is your Bitcoin wallet balance:\n\n' +
-            '**Onchain Balance**\n' +
-            '```\n' +
-            formattedBalance.onchain.formatted +
-            '\n```\n\n' +
-            '**Offchain Balance**\n' +
-            '```\n' +
-            formattedBalance.offchain.formatted +
-            '\n```\n\n' +
-            '**Total Balance**\n' +
-            '```\n' +
-            formattedBalance.total.formatted +
-            (formattedBalance.fiat
-              ? `\n≈ $${formattedBalance.fiat.value.toFixed(2)} USD`
-              : '') +
-            '\n```',
+          text: `Your Bitcoin wallet balance is: ${btcAmount} BTC${fiatStr}\n\nThis is testnet Bitcoin on the Mutinynet network, which isn't real Bitcoin that can be exchanged for actual currency.`,
         },
       ],
     };

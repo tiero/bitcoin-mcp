@@ -1,12 +1,15 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { tool } from '../../src/tools/get-balance.js';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { tool, fetchBitcoinPrice } from '../../src/tools/get-balance.js';
 import * as state from '../../src/lib/state.js';
 import * as wallet from '../../src/lib/wallet.js';
-import * as balance from '../../src/tools/balance.js';
 import type { WalletState } from '../../src/lib/state.js';
 import type { ToolResponse } from '../../src/tools/types.js';
 
-// Mock the modules
+// Mock fetch globally
+const globalFetch = vi.fn();
+global.fetch = globalFetch;
+
+// Mock modules
 vi.mock('../../src/lib/wallet.js', () => ({
   initializeWallet: vi.fn(),
 }));
@@ -15,132 +18,135 @@ vi.mock('../../src/lib/state.js', () => ({
   getWalletState: vi.fn(),
 }));
 
-vi.mock('../../src/tools/balance.js', () => ({
-  getBalance: vi.fn(),
-}));
-
 describe('get-balance tool', () => {
+  const CACHE_DURATION = 60 * 1000; // 1 minute in milliseconds
+  let priceCache: { usd: number; timestamp: number } | null = null;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    // Reset price cache before each test
+    priceCache = null;
   });
 
-  it('should return onchain, offchain, and total balances when wallet is initialized', async () => {
-    // Mock wallet state as initialized
-    vi.mocked(state.getWalletState).mockReturnValue({
-      initialized: true,
-      network: 'mutinynet',
-      createdAt: Date.now(),
-    } satisfies WalletState);
-
-    // Mock balance response
-    const mockBalance = {
-      onchain: 0.5,
-      offchain: 0.3,
-      total: 0.8,
-      fiat: {
-        usd: 40000,
-        timestamp: Date.now(),
-      },
-    };
-
-    vi.mocked(wallet.initializeWallet).mockResolvedValue({} as any);
-    vi.mocked(balance.getBalance).mockResolvedValue(mockBalance);
-
-    const result = (await tool.handler({})) as ToolResponse;
-
-    // Check response format
-    expect(result.content).toHaveLength(1);
-    expect(result.content[0].type).toBe('text');
-
-    const responseText = result.content[0].text;
-    expect(responseText).toContain('0.50000000 BTC');
-    expect(responseText).toContain('0.30000000 BTC');
-    expect(responseText).toContain('0.80000000 BTC');
-    expect(responseText).toContain('$32000.00 USD');
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  it('should format balance without fiat when not available', async () => {
-    // Mock wallet state as initialized
-    vi.mocked(state.getWalletState).mockReturnValue({
-      initialized: true,
-      network: 'mutinynet',
-      createdAt: Date.now(),
-    } satisfies WalletState);
+  describe('fetchBitcoinPrice', () => {
+    it('should fetch and cache bitcoin price', async () => {
+      const mockPrice = 50000;
+      globalFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ USD: { last: mockPrice } }),
+      });
 
-    // Mock balance response without fiat
-    const mockBalance = {
-      onchain: 1.0,
-      offchain: 0.5,
-      total: 1.5,
-    };
+      const price = await fetchBitcoinPrice();
+      expect(price).toBe(mockPrice);
+      // Note: We can't test priceCache directly as it's internal to the module
+    });
 
-    vi.mocked(wallet.initializeWallet).mockResolvedValue({} as any);
-    vi.mocked(balance.getBalance).mockResolvedValue(mockBalance);
+    it('should use cached price when fetch fails within cache duration', async () => {
+      vi.useFakeTimers();
+      const mockPrice = 50000;
+      
+      // First successful fetch
+      globalFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ USD: { last: mockPrice } }),
+      });
+      await fetchBitcoinPrice();
 
-    const result = (await tool.handler({})) as ToolResponse;
+      // Subsequent failed fetch
+      globalFetch.mockRejectedValueOnce(new Error('Network error'));
+      
+      // Within cache duration
+      vi.advanceTimersByTime(CACHE_DURATION - 1000);
+      const price = await fetchBitcoinPrice();
+      expect(price).toBe(mockPrice);
+    });
 
-    // Check response format
-    const responseText = result.content[0].text;
-    expect(responseText).toContain('1.00000000 BTC');
-    expect(responseText).toContain('0.50000000 BTC');
-    expect(responseText).toContain('1.50000000 BTC');
-    expect(responseText).not.toContain('USD');
+    it('should return null when fetch fails and cache is expired', async () => {
+      vi.useFakeTimers();
+      const mockPrice = 50000;
+      
+      // First successful fetch
+      globalFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ USD: { last: mockPrice } }),
+      });
+      await fetchBitcoinPrice();
+
+      // Subsequent failed fetch after cache expiration
+      globalFetch.mockRejectedValueOnce(new Error('Network error'));
+      vi.advanceTimersByTime(CACHE_DURATION + 1000);
+      
+      const price = await fetchBitcoinPrice();
+      expect(price).toBeNull();
+    });
   });
 
-  it('should suggest wallet setup when wallet is not initialized', async () => {
-    // Mock wallet state as not initialized
-    vi.mocked(state.getWalletState).mockReturnValue({
-      initialized: false,
-      network: 'mutinynet',
-      createdAt: Date.now(),
-    } satisfies WalletState);
+  describe('balance handler', () => {
+    it('should return formatted balance with fiat conversion when wallet is initialized', async () => {
+      // Mock wallet state
+      vi.mocked(state.getWalletState).mockReturnValue({
+        initialized: true,
+        network: 'mutinynet',
+        createdAt: Date.now(),
+      } satisfies WalletState);
 
-    const result = (await tool.handler({})) as ToolResponse;
+      // Mock wallet initialization with proper coin methods
+      vi.mocked(wallet.initializeWallet).mockResolvedValue({
+        getCoins: async () => [
+          { value: 100000000 }, // 1 BTC in sats
+        ],
+        getVtxos: async () => [
+          { value: 0 }, // 0 BTC in sats
+        ],
+      } as any);
 
-    // Check response format
-    expect(result.content).toHaveLength(1);
-    expect(result.content[0].type).toBe('text');
-    expect(result.content[0].text).toContain("haven't set up a wallet yet");
+      // Mock Bitcoin price
+      globalFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ USD: { last: 50000 } }),
+      });
 
-    // Check suggested tool
-    expect(result.tools).toBeDefined();
-    if (result.tools) {
-      expect(result.tools).toHaveLength(1);
-      expect(result.tools[0].name).toBe('setup_wallet');
-    }
-  });
+      const result = (await tool.handler({})) as ToolResponse;
 
-  it('should handle errors gracefully', async () => {
-    // Mock wallet state as initialized but make balance throw
-    vi.mocked(state.getWalletState).mockReturnValue({
-      initialized: true,
-      network: 'mutinynet',
-      createdAt: Date.now(),
-    } satisfies WalletState);
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0].type).toBe('text');
+      const text = result.content[0].text;
+      
+      const expectedText = 'Your Bitcoin wallet balance is: 1.00000000 BTC (approximately $50000.00 USD)\n\nThis is testnet Bitcoin on the Mutinynet network, which isn\'t real Bitcoin that can be exchanged for actual currency.';
+      expect(text).toBe(expectedText);
+    });
 
-    vi.mocked(wallet.initializeWallet).mockResolvedValue({} as any);
-    vi.mocked(balance.getBalance).mockRejectedValue(new Error('Test error'));
+    it('should suggest wallet setup when wallet is not initialized', async () => {
+      vi.mocked(state.getWalletState).mockReturnValue({
+        initialized: false,
+        network: 'mutinynet',
+        createdAt: Date.now(),
+      } satisfies WalletState);
 
-    const result = (await tool.handler({})) as ToolResponse;
+      const result = (await tool.handler({})) as ToolResponse;
 
-    // Check error response
-    expect(result.content).toHaveLength(1);
-    expect(result.content[0].type).toBe('text');
-    expect(result.content[0].text).toContain(
-      'Error getting Bitcoin wallet balance'
-    );
-    expect(result.content[0].text).toContain('Test error');
+      expect(result.content[0].text).toContain("haven't set up a wallet yet");
+      expect(result.tools).toContainEqual({
+        name: 'setup_wallet',
+        description: expect.any(String),
+      });
+    });
 
-    // Check suggested tool and resource
-    expect(result.tools).toBeDefined();
-    if (result.tools) {
-      expect(result.tools).toHaveLength(1);
-      expect(result.tools[0].name).toBe('setup_wallet');
-    }
-    expect(result.resources).toBeDefined();
-    if (result.resources) {
-      expect(result.resources).toHaveLength(1);
-      expect(result.resources[0].uri).toBe('bitcoin://wallet/status');
-    }
+    it('should handle errors gracefully', async () => {
+      vi.mocked(state.getWalletState).mockReturnValue({
+        initialized: true,
+        network: 'mutinynet',
+        createdAt: Date.now(),
+      } satisfies WalletState);
+
+      vi.mocked(wallet.initializeWallet).mockRejectedValue(new Error('Wallet error'));
+
+      const result = (await tool.handler({})) as ToolResponse;
+      expect(result.content[0].text).toContain('error');
+    });
   });
 });

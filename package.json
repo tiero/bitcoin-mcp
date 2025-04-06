@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "node --experimental-specifier-resolution=node dist/index.js",
