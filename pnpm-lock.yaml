@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@arklabs/wallet-sdk':
-        specifier: ^0.0.8
-        version: 0.0.8
+        specifier: ^0.0.10
+        version: 0.0.10
       '@modelcontextprotocol/sdk':
         specifier: ^1.8.0
         version: 1.8.0
@@ -30,8 +30,9 @@ importers:
 
 packages:
 
-  '@arklabs/wallet-sdk@0.0.8':
-    resolution: {integrity: sha512-HgOIhvfH1Ys0NAkU3dx/4HipPrXtyAe12fMsoOunXEe3Vc8sEKAHs1Qk4RTFVFvoLqNTyUK8war7PgDDKc04pw==}
+  '@arklabs/wallet-sdk@0.0.10':
+    resolution: {integrity: sha512-WUpNSWnY/cUewDG+mh8dlHHkQDPi0EKSLRnkRePdJWh0m8lEVb7rFtF5GhfrS4+Oa+Mu1OXMMZp3IJDRCxIocg==}
+    engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
   '@esbuild/aix-ppc64@0.25.1':
     resolution: {integrity: sha512-kfYGy8IdzTGy+z0vFGvExZtxkFlA4zAxgKEahG9KE1ScBjpQnFsNOX8KTU5ojNru5ed5CVoJYXFtoxaq5nFbjQ==}
@@ -896,7 +897,7 @@ packages:
 
 snapshots:
 
-  '@arklabs/wallet-sdk@0.0.8':
+  '@arklabs/wallet-sdk@0.0.10':
     dependencies:
       '@noble/curves': 1.7.0
       '@noble/hashes': 1.6.1

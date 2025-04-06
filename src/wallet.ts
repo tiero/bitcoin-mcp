@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import { randomBytes } from 'crypto';
-import { ensureDataDirectory } from './state';
+import { ensureDataDirectory } from './state.js';
 
 // Define the data directory for storing keys
 const DATA_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '.', '.ark-wallet-mcp');

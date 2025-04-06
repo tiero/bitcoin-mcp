@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { initializeWallet, loadKeyFromDisk, saveKeyToDisk, generateNewKey, type KeyData } from './wallet.js';
-import { ensureDataDirectory, getWalletState, saveWalletState } from './state';
+import { ensureDataDirectory, getWalletState, saveWalletState } from './state.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -26,7 +26,7 @@ if (!walletState.initialized) {
 
 // Initialize the Ark Wallet MCP server
 const server = new McpServer({
-  name: "Ark Wallet MPC",
+  name: "Bitcoin MPC",
   version: "0.0.1",
 });
 

@@ -19,7 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@arklabs/wallet-sdk": "^0.0.8",
+    "@arklabs/wallet-sdk": "^0.0.10",
     "@modelcontextprotocol/sdk": "^1.8.0",
     "zod": "^3.24.2"
   },

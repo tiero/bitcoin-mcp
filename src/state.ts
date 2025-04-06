@@ -37,3 +37,32 @@ export interface WalletState {
   createdAt: number;
   lastAccessed?: number;
 }
+
+export interface WalletResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+  needsWallet?: boolean;
+  options?: {
+    create: string;
+    import: string;
+  };
+}
+
+export function checkWalletExists(): WalletResponse {
+  const state = getWalletState();
+  
+  if (!state.initialized) {
+    return {
+      success: false,
+      needsWallet: true,
+      error: 'Wallet not initialized',
+      options: {
+        create: 'Create a new wallet',
+        import: 'Import existing wallet'
+      }
+    };
+  }
+
+  return { success: true };
+}
