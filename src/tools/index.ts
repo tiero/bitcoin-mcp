@@ -3,8 +3,7 @@ import { checkWalletExists } from '../lib/state.js';
 import { Tool, ToolHandler, ToolResponse } from './types.js';
 
 // Import all tools
-import { tool as walletStatusTool } from './wallet-status.js';
-import { tool as setupWalletTool } from './setup-wallet.js';
+import { tool as setupWalletTool } from './wallet.js';
 import { tool as getBalanceTool } from './get-balance.js';
 import { tool as sendBitcoinTool } from './send-bitcoin.js';
 import { tool as getAddressTool } from './get-address.js';
@@ -18,6 +17,14 @@ const withWalletCheck = (handler: ToolHandler): ToolHandler => {
         content: [{ 
           type: "text", 
           text: "Wallet is not initialized. Please set up a wallet first." 
+        }],
+        tools: [{
+          name: "setup_wallet",
+          description: "Create or restore a Bitcoin wallet"
+        }],
+        resources: [{
+          uri: "bitcoin://wallet/status",
+          description: "Check wallet status"
         }]
       };
     }
@@ -37,10 +44,7 @@ const withWalletCheck = (handler: ToolHandler): ToolHandler => {
 
 // All available tools
 const tools: Tool[] = [
-  // Tools that don't need wallet check
   setupWalletTool,
-  // Tools that need wallet check
-  walletStatusTool,
   getBalanceTool,
   sendBitcoinTool,
   getAddressTool

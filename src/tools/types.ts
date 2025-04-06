@@ -29,6 +29,14 @@ export type ContentItem = {
 // Tool response type
 export type ToolResponse = {
   content: ContentItem[];
+  tools?: {
+    name: string;
+    description: string;
+  }[];
+  resources?: {
+    uri: string;
+    description: string;
+  }[];
   _meta?: Record<string, unknown>;
   isError?: boolean;
   [key: string]: unknown;
@@ -40,6 +48,7 @@ export type ToolHandler = (extra: { params?: Record<string, unknown> }) => Promi
 // Tool type
 export interface Tool {
   name: string;
+  description: string;
   schema?: z.ZodType;
   handler: ToolHandler;
 }

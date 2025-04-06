@@ -13,6 +13,42 @@ const server = new McpServer({
   version: "0.0.1"
 });
 
+// Register bitcoin wallet status resource
+server.resource(
+  "status",
+  "bitcoin://wallet/status",
+  async (uri) => {
+    const walletState = getWalletState();
+    const keyData = loadKeyFromDisk();
+
+    const status = {
+      initialized: walletState.initialized,
+      network: walletState.network,
+      createdAt: walletState.createdAt,
+      lastAccessed: walletState.lastAccessed,
+      hasKey: !!keyData
+    };
+
+    return {
+      contents: [{
+        uri: uri.href,
+        text: "Bitcoin Wallet Status:\n\n" +
+              "**Initialization**\n" +
+              "```\n" +
+              `Initialized: ${status.initialized}\n` +
+              `Network: ${status.network}\n` +
+              `Created: ${new Date(status.createdAt).toLocaleString()}\n` +
+              (status.lastAccessed ? 
+                `Last Accessed: ${new Date(status.lastAccessed).toLocaleString()}\n` : 
+                '') +
+              `Has Private Key: ${status.hasKey}\n` +
+              "```",
+        mimeType: "text/markdown"
+      }]
+    };
+  }
+);
+
 // Register bitcoin addresses resource
 server.resource(
   "address",
@@ -31,8 +67,16 @@ server.resource(
     return {
       contents: [{
         uri: uri.href,
-        text: JSON.stringify(addresses, null, 2),
-        mimeType: "application/json"
+        text: "Here are your Bitcoin wallet addresses for receiving cryptocurrency:\n\n" +
+              "**Onchain Address**\n" +
+              "```\n" +
+              addresses.onchain +
+              "\n```\n\n" +
+              "**Offchain Address**\n" +
+              "```\n" +
+              addresses.offchain +
+              "\n```",
+        mimeType: "text/markdown"
       }]
     };
   }

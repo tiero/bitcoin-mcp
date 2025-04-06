@@ -1,45 +1,45 @@
 import { z } from 'zod';
-import { initializeWallet, generateNewKey, saveKeyToDisk, loadKeyFromDisk, type KeyData } from '../lib/wallet.js';
-import { Tool, ToolResponse } from './types.js';
+import { Tool } from './types.js';
+import { initializeWallet } from '../lib/wallet.js';
+import { saveWalletState } from '../lib/state.js';
 
-// Schema
+// Schema for setup_wallet command
 export const schema = z.object({
-  action: z.enum(["create", "restore"]),
-  privateKey: z.string().optional(),
-  network: z.enum(["mutinynet", "bitcoin", "testnet", "signet"]).default("mutinynet"),
-  arkServerUrl: z.string().url().optional(),
-  esploraUrl: z.string().url().optional()
-});
+  network: z.enum(['mutinynet', 'mainnet']).optional(),
+  privateKey: z.string().optional()
+}).optional();
 
 // Handler
 const handler: Tool['handler'] = async ({ params }) => {
-  const { action, privateKey, network, arkServerUrl, esploraUrl } = params as z.infer<typeof schema>;
-
   try {
-    // Generate or use provided key
-    const keyData: KeyData = action === 'create' 
-      ? { privateKeyHex: await generateNewKey(), createdAt: Date.now() }
-      : { privateKeyHex: privateKey!, createdAt: Date.now() };
+    const options = params as z.infer<typeof schema>;
+    const network = options?.network || 'mutinynet';
 
-    // Save key to disk
-    await saveKeyToDisk(keyData);
-
-    // Initialize wallet with network
-    await initializeWallet(network);
+    const wallet = await initializeWallet(network);
+    
+    // Save wallet state
+    saveWalletState({
+      initialized: true,
+      network,
+      createdAt: Date.now()
+    });
 
     return {
       content: [{ 
         type: "text", 
-        text: `Wallet successfully ${action === 'create' ? 'created' : 'restored'} on ${network} network.`
+        text: `Bitcoin wallet successfully initialized on ${network}!`
+      }],
+      resources: [{
+        uri: "bitcoin://wallet/status",
+        description: "Check wallet status"
       }]
     };
   } catch (error) {
     return {
       content: [{ 
         type: "text", 
-        text: error instanceof Error ? error.message : 'Failed to setup wallet'
-      }],
-      isError: true
+        text: `Error setting up wallet: ${error instanceof Error ? error.message : 'Unknown error'}`
+      }]
     };
   }
 };
@@ -47,6 +47,7 @@ const handler: Tool['handler'] = async ({ params }) => {
 // Tool definition
 export const tool: Tool = {
   name: 'setup_wallet',
+  description: 'Set up a new Bitcoin wallet or restore an existing one',
   schema,
   handler
 };

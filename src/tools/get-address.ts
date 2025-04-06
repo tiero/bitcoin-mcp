@@ -1,33 +1,43 @@
 import { ToolResponse } from './types.js';
-import { initializeWallet, loadKeyFromDisk } from '../lib/wallet.js';
+import { initializeWallet } from '../lib/wallet.js';
 import { getWalletState } from '../lib/state.js';
 
 export const tool = {
   name: 'get_address',
-  description: 'Get Bitcoin address',
+  description: 'Get your Bitcoin wallet addresses for receiving cryptocurrency (both onchain and offchain)',
   handler: async (): Promise<ToolResponse> => {
-    const keyData = loadKeyFromDisk();
-    const walletState = getWalletState();
-    
-    if (!keyData || !walletState.initialized) {
-      return {
-        content: [{ 
-          type: "text", 
-          text: "No wallet has been initialized yet. Use the setup_wallet tool to create or restore a wallet." 
-        }],
-        tools: [{
-          name: "setup_wallet",
-          description: "Initialize or restore a wallet"
-        }]
-      };
-    }
-
     try {
-      const wallet = await initializeWallet(walletState.network);
+      const walletState = getWalletState();
+      if (!walletState.initialized) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: "Let me check your Bitcoin wallet addresses. I see you haven't set up a wallet yet. Would you like me to help you create one? You can use the setup_wallet tool to get started."
+          }],
+          tools: [{
+            name: "setup_wallet",
+            description: "Create or restore a Bitcoin wallet"
+          }]
+        };
+      }
+
+      const wallet = await initializeWallet();
       const addresses = await wallet.getAddress();
       
       return {
         content: [
+          {
+            type: "text",
+            text: "Here are your Bitcoin wallet addresses for receiving cryptocurrency:\n\n" +
+                  "**Onchain Address**\n" +
+                  "```\n" +
+                  addresses.onchain +
+                  "\n```\n\n" +
+                  "**Offchain Address**\n" +
+                  "```\n" +
+                  addresses.offchain +
+                  "\n```"
+          },
           {
             type: "resource",
             resource: {
@@ -42,10 +52,14 @@ export const tool = {
       return {
         content: [{ 
           type: "text", 
-          text: `Error getting address: ${error instanceof Error ? error.message : 'Unknown error'}`
+          text: `Error getting Bitcoin wallet addresses: ${error instanceof Error ? error.message : 'Unknown error'}`
         }],
         tools: [{
-          name: "get_wallet_status",
+          name: "setup_wallet",
+          description: "Create or restore a Bitcoin wallet"
+        }],
+        resources: [{
+          uri: "bitcoin://wallet/status",
           description: "Check wallet status"
         }]
       };
