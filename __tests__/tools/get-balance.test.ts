@@ -94,14 +94,18 @@ describe('get-balance tool', () => {
         createdAt: Date.now(),
       } satisfies WalletState);
 
-      // Mock wallet initialization with proper coin methods
+      const mockAddress = 'tb1pza3futknjns2drh095hz8v4czetxr7g3egsj24wvenrqs5vl90eqs4wmm5';
+
+      // Mock wallet initialization with proper balance method
       vi.mocked(wallet.initializeWallet).mockResolvedValue({
-        getCoins: async () => [
-          { value: 100000000 }, // 1 BTC in sats
-        ],
-        getVtxos: async () => [
-          { value: 0 }, // 0 BTC in sats
-        ],
+        getBalance: async () => ({
+          onchain: { total: 100000000 }, // 1 BTC in sats
+          offchain: { total: 0 }, // 0 BTC in sats
+        }),
+        getAddress: async () => ({
+          onchain: mockAddress,
+          offchain: 'lnxxx',
+        }),
       } as any);
 
       // Mock Bitcoin price
@@ -116,8 +120,18 @@ describe('get-balance tool', () => {
       expect(result.content[0].type).toBe('text');
       const text = result.content[0].text;
       
-      const expectedText = 'Your Bitcoin wallet balance is: 1.00000000 BTC (approximately $50000.00 USD)\n\nThis is testnet Bitcoin on the Mutinynet network, which isn\'t real Bitcoin that can be exchanged for actual currency.';
+      const expectedText = 'Your Bitcoin wallet balance is: 1.00000000 BTC (approximately $50000.00 USD)\n\n' +
+                         `Your receiving address: ${mockAddress}\n\n` +
+                         'This is testnet Bitcoin on the Mutinynet network, which isn\'t real Bitcoin that can be exchanged for actual currency.';
       expect(text).toBe(expectedText);
+
+      // Verify address resource
+      expect(result.resources).toBeDefined();
+      expect(result.resources).toHaveLength(1);
+      expect(result.resources![0]).toEqual({
+        uri: `bitcoin://address/${mockAddress}`,
+        description: 'Your Bitcoin wallet address',
+      });
     });
 
     it('should suggest wallet setup when wallet is not initialized', async () => {
