@@ -29,6 +29,9 @@ export const tool = {
       const wallet = await initializeWallet();
       const addresses = await wallet.getAddress();
 
+      // Handle case where offchain is an object with address property
+      const offchainAddress =  addresses.offchain?.address || 'Not available'
+
       return {
         content: [
           {
@@ -41,7 +44,7 @@ export const tool = {
               '\n```\n\n' +
               '**Offchain Address**\n' +
               '```\n' +
-              addresses.offchain?.address +
+              offchainAddress +
               '\n```',
           },
           {
@@ -59,7 +62,7 @@ export const tool = {
         content: [
           {
             type: 'text',
-            text: `Error getting Bitcoin wallet addresses: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            text: `Error getting Bitcoin wallet addresses: ${error instanceof Error ? error.message : String(error)}`,
           },
         ],
         tools: [

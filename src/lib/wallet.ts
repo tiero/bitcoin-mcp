@@ -47,19 +47,16 @@ export function saveKeyToDisk(keyData: KeyData): void {
 
 // Function to load key data from disk
 export function loadKeyFromDisk(): KeyData | null {
-  if (!fs.existsSync(KEY_PATH)) {
-    return null;
-  }
-
   try {
-    const jsonString = fs.readFileSync(KEY_PATH, 'utf-8');
-    const data = JSON.parse(jsonString);
+    if (!fs.existsSync(KEY_PATH)) {
+      return null;
+    }
+
+    const data = JSON.parse(fs.readFileSync(KEY_PATH, 'utf8'));
     return KeyDataSchema.parse(data);
   } catch (error) {
     console.error('Error loading key:', error);
-    throw new Error(
-      `Failed to load key: ${error instanceof Error ? error.message : String(error)}`
-    );
+    return null;
   }
 }
 
