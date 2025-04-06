@@ -1,42 +1,72 @@
-import { setupWalletTool, getWalletStatusTool, getAddressesTool, getBalanceTool } from './commands.js';
-import { z } from 'zod';
-import { checkWalletExists, WalletResponse } from '../lib/state.js';
-import { handleSendBitcoin } from './wallet.js';
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { checkWalletExists } from '../lib/state.js';
+import { Tool, ToolHandler, ToolResponse } from './types.js';
+
+// Import all tools
+import { tool as walletStatusTool } from './wallet-status.js';
+import { tool as setupWalletTool } from './setup-wallet.js';
+import { tool as getBalanceTool } from './get-balance.js';
+import { tool as sendBitcoinTool } from './send-bitcoin.js';
 
 // Wrap handler with wallet check
-const withWalletCheck = (handler: Function) => async (...args: any[]): Promise<WalletResponse> => {
-  const walletCheck = checkWalletExists();
-  if (!walletCheck.success) {
-    return walletCheck;
-  }
-  
-  try {
-    const result = await handler(...args);
-    return { success: true, data: result };
-  } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    };
-  }
+const withWalletCheck = (handler: ToolHandler): ToolHandler => {
+  return async (extra) => {
+    const walletCheck = checkWalletExists();
+    if (!walletCheck.success) {
+      return {
+        content: [{ 
+          type: "text", 
+          text: "Wallet is not initialized. Please set up a wallet first." 
+        }]
+      };
+    }
+    
+    try {
+      return await handler(extra);
+    } catch (error) {
+      return { 
+        content: [{ 
+          type: "text", 
+          text: error instanceof Error ? error.message : 'Unknown error'
+        }]
+      };
+    }
+  };
 };
 
-// Define all tools in one place
-export const tools = [
+// All available tools
+const tools: Tool[] = [
+  // Tools that don't need wallet check
   setupWalletTool,
-  getWalletStatusTool,
-  getAddressesTool,
+  // Tools that need wallet check
+  walletStatusTool,
   getBalanceTool,
-  {
-    name: 'send_bitcoin',
-    description: 'Send Bitcoin to an address',
-    schema: {
-      params: z.object({
-        address: z.string(),
-        amount: z.number().positive(),
-        feeRate: z.number().positive().optional()
-      })
-    },
-    handler: withWalletCheck(handleSendBitcoin)
-  }
+  sendBitcoinTool
 ];
+
+export const registerTools = (server: McpServer): void => {
+  for (const tool of tools) {
+    server.tool(tool.name, async (extra: any) => {
+      const handler = tool.name === 'setup_wallet' ? tool.handler : withWalletCheck(tool.handler);
+      
+      try {
+        // If schema exists and params are provided, validate them
+        if (tool.schema && extra.params !== undefined) {
+          const validatedParams = tool.schema.parse(extra.params);
+          return await handler({ params: validatedParams });
+        }
+        
+        // If no schema or no params, just pass through
+        return await handler({ params: {} });
+      } catch (error) {
+        return {
+          content: [{ 
+            type: "text", 
+            text: error instanceof Error ? error.message : 'Unknown error'
+          }],
+          isError: true
+        };
+      }
+    });
+  }
+};
