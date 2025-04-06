@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "bitcoin-wallet": {
-      "command": "node",
-      "args": ["/Users/tiero/projects/arklabs/wallet-mcp/dist/index.js"],
-      "description": "A Model Context Protocol server for managing a Bitcoin wallet"
-    }
-  }
-}
