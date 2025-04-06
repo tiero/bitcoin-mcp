@@ -1,12 +1,7 @@
+import { setupWalletTool, getWalletStatusTool, getAddressesTool, getBalanceTool } from './commands.js';
 import { z } from 'zod';
 import { checkWalletExists, WalletResponse } from '../lib/state.js';
-import { 
-  handleGetWalletStatus,
-  handleGetAddresses,
-  handleGetBalance,
-  handleSendBitcoin,
-  WalletToolSchemas
-} from './wallet.js';
+import { handleSendBitcoin } from './wallet.js';
 
 // Wrap handler with wallet check
 const withWalletCheck = (handler: Function) => async (...args: any[]): Promise<WalletResponse> => {
@@ -26,32 +21,22 @@ const withWalletCheck = (handler: Function) => async (...args: any[]): Promise<W
   }
 };
 
-// Define the tools with their schemas and handlers
+// Define all tools in one place
 export const tools = [
-  {
-    name: 'get_wallet_status',
-    description: 'Get the current status of the wallet',
-    schema: { params: WalletToolSchemas.getWalletStatus },
-    handler: withWalletCheck(handleGetWalletStatus)
-  },
-  {
-    name: 'get_addresses',
-    description: 'Get all wallet addresses',
-    schema: { params: WalletToolSchemas.getAddresses },
-    handler: withWalletCheck(handleGetAddresses)
-  },
-  {
-    name: 'get_balance',
-    description: 'Get wallet balances including onchain, offchain, and USD value',
-    schema: { params: WalletToolSchemas.getBalance },
-    handler: withWalletCheck(handleGetBalance)
-  },
+  setupWalletTool,
+  getWalletStatusTool,
+  getAddressesTool,
+  getBalanceTool,
   {
     name: 'send_bitcoin',
     description: 'Send Bitcoin to an address',
-    schema: { params: WalletToolSchemas.sendBitcoin },
+    schema: {
+      params: z.object({
+        address: z.string(),
+        amount: z.number().positive(),
+        feeRate: z.number().positive().optional()
+      })
+    },
     handler: withWalletCheck(handleSendBitcoin)
   }
 ];
-
-export { setupWalletTool, getWalletStatusTool, getAddressesTool, getBalanceTool } from './commands.js';

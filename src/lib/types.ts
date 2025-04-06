@@ -4,6 +4,10 @@ export interface McpResponse {
     text: string;
     type: "text";
   } | {
+    type: "code";
+    text: string;
+    language: string;
+  } | {
     type: "image";
     data: string;
     mimeType: string;
@@ -18,6 +22,10 @@ export interface McpResponse {
       blob: string;
       mimeType?: string;
     };
+  }>;
+  tools?: Array<{
+    name: string;
+    description: string;
   }>;
   _meta?: Record<string, unknown>;
   isError?: boolean;

@@ -1,8 +1,5 @@
 import fs from 'fs';
-import path from 'path';
-
-const DATA_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '.', '.ark-wallet-mcp');
-const WALLET_STATE_PATH = path.join(DATA_DIR, 'wallet-state.json');
+import { DATA_DIR, WALLET_STATE_PATH } from './constants.js';
 
 export function ensureDataDirectory(): void {
   if (!fs.existsSync(DATA_DIR)) {

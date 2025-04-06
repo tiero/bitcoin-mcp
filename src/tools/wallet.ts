@@ -15,6 +15,10 @@ export async function handleGetWalletStatus(): Promise<McpResponse> {
         type: "text", 
         text: "No wallet has been initialized yet. Use the setup_wallet tool to create or restore a wallet." 
       }],
+      tools: [{
+        name: "setup_wallet",
+        description: "Initialize or restore a wallet"
+      }]
     };
   }
   
@@ -26,6 +30,20 @@ export async function handleGetWalletStatus(): Promise<McpResponse> {
             `Created: ${new Date(keyData.createdAt).toLocaleString()}\n` +
             `Last accessed: ${walletState.lastAccessed ? new Date(walletState.lastAccessed).toLocaleString() : 'Unknown'}`
     }],
+    tools: [
+      {
+        name: "get_balance",
+        description: "Check wallet balance"
+      },
+      {
+        name: "get_addresses",
+        description: "View wallet addresses"
+      },
+      {
+        name: "send_bitcoin",
+        description: "Send Bitcoin to an address"
+      }
+    ]
   };
 }
 
@@ -39,41 +57,53 @@ export async function handleGetAddresses(): Promise<McpResponse> {
         type: "text", 
         text: "No wallet has been initialized yet. Use the setup_wallet tool to create or restore a wallet." 
       }],
+      tools: [{
+        name: "setup_wallet",
+        description: "Initialize or restore a wallet"
+      }]
     };
   }
   
   try {
-    // Update last accessed timestamp
     walletState.lastAccessed = Date.now();
     saveWalletState(walletState);
     
     const wallet = await initializeWallet(walletState.network);
     const addresses = await wallet.getAddress();
-    
-    // Fix: Ensure all address values are strings
-    const formattedAddresses = {
-      onchain: String(addresses.onchain),
-      offchain: String(addresses.offchain),
-      boarding: String(addresses.boarding),
-      bip21: String(addresses.bip21)
-    };
-    
+
     return {
-      content: [{ 
-        type: "text", 
-        text: `Wallet Addresses:\n\n` +
-              `Bitcoin Address: ${formattedAddresses.onchain}\n` +
-              `Ark Address: ${formattedAddresses.offchain}\n` +
-              `Boarding Address: ${formattedAddresses.boarding}\n` +
-              `BIP21 URI: ${formattedAddresses.bip21}`
-      }],
+      content: [
+        {
+          type: "text",
+          text: "Your wallet addresses:"
+        },
+        {
+          type: "code",
+          language: "json",
+          text: JSON.stringify(addresses, null, 2)
+        }
+      ],
+      tools: [
+        {
+          name: "get_balance",
+          description: "Check wallet balance"
+        },
+        {
+          name: "send_bitcoin",
+          description: "Send Bitcoin to an address"
+        }
+      ]
     };
   } catch (error) {
     return {
       content: [{ 
         type: "text", 
-        text: `Error retrieving addresses: ${error instanceof Error ? error.message : String(error)}` 
+        text: `Error getting addresses: ${error instanceof Error ? error.message : 'Unknown error'}`
       }],
+      tools: [{
+        name: "get_wallet_status",
+        description: "Check wallet status"
+      }]
     };
   }
 }
@@ -88,41 +118,53 @@ export async function handleGetBalance(): Promise<McpResponse> {
         type: "text", 
         text: "No wallet has been initialized yet. Use the setup_wallet tool to create or restore a wallet." 
       }],
+      tools: [{
+        name: "setup_wallet",
+        description: "Initialize or restore a wallet"
+      }]
     };
   }
   
   try {
-    // Update last accessed timestamp
     walletState.lastAccessed = Date.now();
     saveWalletState(walletState);
     
     const wallet = await initializeWallet(walletState.network);
     const balance = await getBalance(wallet);
     
-    // Format balance in sats and BTC
-    const btcBalance = balance.total / 100_000_000;
-    
-    let response = `Wallet Balance:\n\n` +
-                  `Total: ${balance.total} sats (${btcBalance.toFixed(8)} BTC)\n` +
-                  `Onchain: ${balance.onchain} sats\n` +
-                  `Offchain: ${balance.offchain} sats`;
-    
-    if (balance.fiat) {
-      response += `\nUSD Value: $${balance.fiat.usd.toFixed(2)}`;
-    }
-    
     return {
-      content: [{ 
-        type: "text", 
-        text: response
-      }],
+      content: [
+        {
+          type: "text",
+          text: "Current wallet balance:"
+        },
+        {
+          type: "code",
+          language: "json",
+          text: JSON.stringify(balance, null, 2)
+        }
+      ],
+      tools: [
+        {
+          name: "send_bitcoin",
+          description: "Send Bitcoin to an address"
+        },
+        {
+          name: "get_addresses",
+          description: "View wallet addresses"
+        }
+      ]
     };
   } catch (error) {
     return {
       content: [{ 
         type: "text", 
-        text: `Error getting balance: ${error instanceof Error ? error.message : String(error)}` 
+        text: `Error getting balance: ${error instanceof Error ? error.message : 'Unknown error'}`
       }],
+      tools: [{
+        name: "get_wallet_status",
+        description: "Check wallet status"
+      }]
     };
   }
 }
@@ -141,17 +183,18 @@ export async function handleSendBitcoin(params: {
         type: "text", 
         text: "No wallet has been initialized yet. Use the setup_wallet tool to create or restore a wallet." 
       }],
+      tools: [{
+        name: "setup_wallet",
+        description: "Initialize or restore a wallet"
+      }]
     };
   }
   
   try {
-    // Update last accessed timestamp
     walletState.lastAccessed = Date.now();
     saveWalletState(walletState);
     
     const wallet = await initializeWallet(walletState.network);
-    
-    // Send the transaction
     const txid = await wallet.sendBitcoin({
       address: params.address,
       amount: params.amount,
@@ -159,21 +202,44 @@ export async function handleSendBitcoin(params: {
     });
     
     return {
-      content: [{ 
-        type: "text", 
-        text: `Transaction sent successfully!\n\n` +
-              `Transaction ID: ${txid}\n` +
-              `Amount: ${params.amount} satoshis\n` +
-              `To: ${params.address}\n` +
-              `Fee Rate: ${params.feeRate ? `${params.feeRate} sats/vbyte` : 'Default'}`
-      }],
+      content: [
+        {
+          type: "text",
+          text: "Transaction sent successfully!"
+        },
+        {
+          type: "code",
+          language: "json",
+          text: JSON.stringify({ txid }, null, 2)
+        }
+      ],
+      tools: [
+        {
+          name: "get_balance",
+          description: "Check updated wallet balance"
+        },
+        {
+          name: "get_wallet_status",
+          description: "View wallet status"
+        }
+      ]
     };
   } catch (error) {
     return {
       content: [{ 
         type: "text", 
-        text: `Error sending transaction: ${error instanceof Error ? error.message : String(error)}` 
+        text: `Error sending Bitcoin: ${error instanceof Error ? error.message : 'Unknown error'}`
       }],
+      tools: [
+        {
+          name: "get_balance",
+          description: "Check current balance"
+        },
+        {
+          name: "get_wallet_status",
+          description: "Check wallet status"
+        }
+      ]
     };
   }
 }

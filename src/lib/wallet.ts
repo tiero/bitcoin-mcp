@@ -1,18 +1,13 @@
 import { z } from "zod";
 import { InMemoryKey, Wallet } from '@arklabs/wallet-sdk';
 import fs from 'fs';
-import path from 'path';
 import readline from 'readline';
 import { randomBytes } from 'crypto';
 import { ensureDataDirectory } from './state.js';
-
-// Define the data directory for storing keys
-const DATA_DIR = path.join(process.env.HOME || process.env.USERPROFILE || '.', '.ark-wallet-mcp');
+import { DATA_DIR, KEY_PATH } from './constants.js';
 
 // Ensure data directory exists
 ensureDataDirectory();
-
-const KEY_PATH = path.join(DATA_DIR, 'bitcoin-ark-wallet-key.json');
 
 // Schema for stored key data
 const KeyDataSchema = z.object({

@@ -4,14 +4,22 @@ import { z } from 'zod';
 export const setupWalletSchema = z.object({
   action: z.enum(["create", "restore"]),
   privateKey: z.string().optional(),
-  network: z.enum(["mutinynet", "mainnet", "testnet"]).default("mutinynet"),
+  network: z.enum(["mutinynet", "bitcoin", "testnet", "signet"]).default("mutinynet"),
   arkServerUrl: z.string().url().optional(),
   esploraUrl: z.string().url().optional()
 });
 
-export const getWalletStatusSchema = z.object({});
-export const getAddressesSchema = z.object({});
-export const getBalanceSchema = z.object({});
+export const getWalletStatusSchema = {
+  params: z.object({})
+};
+
+export const getAddressesSchema = {
+  params: z.object({})
+};
+
+export const getBalanceSchema = {
+  params: z.object({})
+};
 
 export const sendBitcoinSchema = z.object({
   address: z.string(),
