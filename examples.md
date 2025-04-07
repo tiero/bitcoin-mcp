@@ -40,8 +40,6 @@ _Claude uses the `get_balance` tool_
 - On-chain: 0.1 BTC
 - Off-chain: 0.05 BTC
 
-Your receiving address: bc1qxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-
 This is testnet Bitcoin on the Mutinynet network, which isn't real Bitcoin that can be exchanged for actual currency.
 
 ## Wallet Operations
@@ -90,9 +88,9 @@ _Claude uses the `send_bitcoin` tool with the following parameters:_
    - Use appropriate fee rates
    - Back up your wallet seed phrase
    - Keep your Ark Server public key secure
+   - Use mutinynet for development and testing
 
 4. **Testing**
-   - Use mutinynet for development and testing
    - Test transactions with small amounts first
    - Verify transaction details before sending
 

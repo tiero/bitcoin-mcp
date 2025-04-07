@@ -1,23 +1,16 @@
 import { z } from 'zod';
 import { Tool } from './types.js';
-import { getWalletState, saveWalletState } from '../lib/state.js';
+import { setupWalletSchema } from './schemas.js';
+import { saveWalletState } from '../lib/state.js';
 import { initializeWallet } from '../lib/wallet.js';
-
-// Schema for setup_wallet command
-export const schema = z
-  .object({
-    network: z.enum(['mutinynet', 'mainnet']).optional(),
-    privateKey: z.string().optional(),
-  })
-  .optional();
 
 export const tool: Tool = {
   name: 'setup_wallet',
   description: 'Set up a new Bitcoin wallet or restore an existing one',
-  schema,
+  schema: setupWalletSchema,
   handler: async ({ params }) => {
     try {
-      const options = params as z.infer<typeof schema>;
+      const options = params as z.infer<typeof setupWalletSchema>;
       const network = options?.network || 'mutinynet';
 
       const wallet = await initializeWallet(network);

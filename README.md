@@ -8,7 +8,7 @@ The Bitcoin MCP server extends any MCP client's capabilities by providing tools 
 
 - Create and restore Bitcoin wallets
 - Send Bitcoin transactions
-- Retrieve Bitcoin wallet balances (onchain and offchain)
+- Retrieve Bitcoin wallet balances (onchain and offchain) with fiat conversion
 - Real-time Bitcoin price conversion
 - Cache-optimized price fetching via blockchain.info
 - Strongly typed wallet operations
@@ -84,22 +84,6 @@ pnpm test
 
 ```bash
 pnpm build
-```
-
-## Project Structure
-
-```
-src/
-├── lib/         # Core library code
-│   ├── state.ts   # Wallet state management
-│   ├── types.ts   # Shared type definitions
-│   └── wallet.ts  # Wallet operations
-├── tools/       # MCP tool implementations
-│   ├── balance.ts   # Balance functionality
-│   ├── commands.ts  # Tool definitions
-│   ├── schemas.ts   # Zod schemas
-│   └── wallet.ts    # Wallet tools
-└── index.ts     # Server entry point
 ```
 
 ## Contributing

@@ -30,7 +30,7 @@ export function saveWalletState(state: WalletState): void {
 
 export interface WalletState {
   initialized: boolean;
-  network: string;
+  network: 'bitcoin' | 'testnet' | 'signet' | 'mutinynet';
   createdAt: number;
   lastAccessed?: number;
 }

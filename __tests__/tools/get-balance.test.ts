@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { tool, fetchBitcoinPrice } from '../../src/tools/get-balance.js';
+import { tool as getBalance, fetchBitcoinPrice } from '../../src/tools/get-balance.js';
 import * as state from '../../src/lib/state.js';
 import * as wallet from '../../src/lib/wallet.js';
 import type { WalletState } from '../../src/lib/state.js';
@@ -42,14 +42,13 @@ describe('get-balance tool', () => {
 
       const price = await fetchBitcoinPrice();
       expect(price).toBe(mockPrice);
-      // Note: We can't test priceCache directly as it's internal to the module
     });
 
     it('should use cached price when fetch fails within cache duration', async () => {
       vi.useFakeTimers();
       const mockPrice = 50000;
       
-      // First successful fetch
+      // Initial successful fetch
       globalFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ USD: { last: mockPrice } }),
@@ -58,9 +57,6 @@ describe('get-balance tool', () => {
 
       // Subsequent failed fetch
       globalFetch.mockRejectedValueOnce(new Error('Network error'));
-      
-      // Within cache duration
-      vi.advanceTimersByTime(CACHE_DURATION - 1000);
       const price = await fetchBitcoinPrice();
       expect(price).toBe(mockPrice);
     });
@@ -68,43 +64,44 @@ describe('get-balance tool', () => {
     it('should return null when fetch fails and cache is expired', async () => {
       vi.useFakeTimers();
       const mockPrice = 50000;
-      
-      // First successful fetch
+
+      // Initial successful fetch
       globalFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve({ USD: { last: mockPrice } }),
       });
       await fetchBitcoinPrice();
 
+      // Advance time beyond cache duration
+      vi.advanceTimersByTime(CACHE_DURATION + 1000);
+
       // Subsequent failed fetch after cache expiration
       globalFetch.mockRejectedValueOnce(new Error('Network error'));
-      vi.advanceTimersByTime(CACHE_DURATION + 1000);
-      
       const price = await fetchBitcoinPrice();
       expect(price).toBeNull();
     });
   });
 
-  describe('balance handler', () => {
-    it('should return formatted balance with fiat conversion when wallet is initialized', async () => {
-      // Mock wallet state
+  describe('get-balance handler', () => {
+    it('should return wallet balance with bitcoin and ark addresses', async () => {
+      // Mock wallet state as initialized
       vi.mocked(state.getWalletState).mockReturnValue({
         initialized: true,
         network: 'mutinynet',
         createdAt: Date.now(),
       } satisfies WalletState);
 
-      const mockAddress = 'tb1pza3futknjns2drh095hz8v4czetxr7g3egsj24wvenrqs5vl90eqs4wmm5';
-
-      // Mock wallet initialization with proper balance method
+      // Mock wallet balance and addresses
       vi.mocked(wallet.initializeWallet).mockResolvedValue({
-        getBalance: async () => ({
-          onchain: { total: 100000000 }, // 1 BTC in sats
-          offchain: { total: 0 }, // 0 BTC in sats
+        getBalance: () => Promise.resolve({
+          onchain: { total: 1000000 }, // 0.01 BTC
+          offchain: { total: 500000 }, // 0.005 BTC
         }),
-        getAddress: async () => ({
-          onchain: mockAddress,
-          offchain: 'lnxxx',
+        getAddress: () => Promise.resolve({
+          onchain: 'bc1qxxx',
+          offchain: {
+            address: 'lnxxx',
+          },
         }),
       } as any);
 
@@ -114,53 +111,92 @@ describe('get-balance tool', () => {
         json: () => Promise.resolve({ USD: { last: 50000 } }),
       });
 
-      const result = (await tool.handler({})) as ToolResponse;
+      const result = (await getBalance.handler({})) as ToolResponse;
 
       expect(result.content).toHaveLength(1);
       expect(result.content[0].type).toBe('text');
-      const text = result.content[0].text;
-      
-      const expectedText = 'Your Bitcoin wallet balance is: 1.00000000 BTC (approximately $50000.00 USD)\n\n' +
-                         `Your receiving address: ${mockAddress}\n\n` +
-                         'This is testnet Bitcoin on the Mutinynet network, which isn\'t real Bitcoin that can be exchanged for actual currency.';
-      expect(text).toBe(expectedText);
+      expect(result.content[0].text).toContain('Your wallet balance is: 0.01500000 BTC'); // Total balance
+      expect(result.content[0].text).toContain('Bitcoin Balance: 0.01 BTC'); // Bitcoin balance
+      expect(result.content[0].text).toContain('Ark Balance: 0.005 BTC'); // Ark balance
+      expect(result.content[0].text).toContain('$750.00 USD'); // Fiat value
+      expect(result.content[0].text).toContain('This is testnet Bitcoin'); // Network info
 
-      // Verify address resource
-      expect(result.resources).toBeDefined();
       expect(result.resources).toHaveLength(1);
-      expect(result.resources![0]).toEqual({
-        uri: `bitcoin://address/${mockAddress}`,
-        description: 'Your Bitcoin wallet address',
-      });
+      expect(result.resources![0].uri).toBe('bitcoin://balance');
     });
 
-    it('should suggest wallet setup when wallet is not initialized', async () => {
-      vi.mocked(state.getWalletState).mockReturnValue({
-        initialized: false,
-        network: 'mutinynet',
-        createdAt: Date.now(),
-      } satisfies WalletState);
-
-      const result = (await tool.handler({})) as ToolResponse;
-
-      expect(result.content[0].text).toContain("haven't set up a wallet yet");
-      expect(result.tools).toContainEqual({
-        name: 'setup_wallet',
-        description: expect.any(String),
-      });
-    });
-
-    it('should handle errors gracefully', async () => {
+    it('should return wallet balance without ark address', async () => {
+      // Mock wallet state as initialized
       vi.mocked(state.getWalletState).mockReturnValue({
         initialized: true,
         network: 'mutinynet',
         createdAt: Date.now(),
       } satisfies WalletState);
 
-      vi.mocked(wallet.initializeWallet).mockRejectedValue(new Error('Wallet error'));
+      // Mock wallet balance and addresses without offchain
+      vi.mocked(wallet.initializeWallet).mockResolvedValue({
+        getBalance: () => Promise.resolve({
+          onchain: { total: 1000000 }, // 0.01 BTC
+        }),
+        getAddress: () => Promise.resolve({
+          onchain: 'bc1qxxx',
+        }),
+      } as any);
 
-      const result = (await tool.handler({})) as ToolResponse;
-      expect(result.content[0].text).toContain('error');
+      // Mock Bitcoin price
+      globalFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve({ USD: { last: 50000 } }),
+      });
+
+      const result = (await getBalance.handler({})) as ToolResponse;
+
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0].type).toBe('text');
+      expect(result.content[0].text).toContain('Your wallet balance is: 0.01000000 BTC'); // Total balance
+      expect(result.content[0].text).toContain('Bitcoin Balance: 0.01 BTC'); // Bitcoin balance
+      expect(result.content[0].text).not.toContain('Ark Balance'); // No Ark balance
+      expect(result.content[0].text).toContain('$500.00 USD'); // Fiat value
+      expect(result.content[0].text).toContain('This is testnet Bitcoin'); // Network info
+
+      expect(result.resources).toHaveLength(1);
+      expect(result.resources![0].uri).toBe('bitcoin://balance');
+    });
+
+    it('should suggest setup_wallet tool when wallet is not initialized', async () => {
+      // Mock wallet state as not initialized
+      vi.mocked(state.getWalletState).mockReturnValue({
+        initialized: false,
+        network: 'mutinynet',
+        createdAt: Date.now(),
+      } satisfies WalletState);
+
+      const result = (await getBalance.handler({})) as ToolResponse;
+
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0].type).toBe('text');
+      expect(result.content[0].text).toContain("haven't set up a wallet");
+      expect(result.tools).toHaveLength(1);
+      expect(result.tools![0].name).toBe('setup_wallet');
+    });
+
+    it('should handle errors gracefully', async () => {
+      // Mock wallet state as initialized
+      vi.mocked(state.getWalletState).mockReturnValue({
+        initialized: true,
+        network: 'mutinynet',
+        createdAt: Date.now(),
+      } satisfies WalletState);
+
+      // Mock wallet initialization error
+      vi.mocked(wallet.initializeWallet).mockRejectedValue(new Error('Test error'));
+
+      const result = (await getBalance.handler({})) as ToolResponse;
+
+      expect(result.content).toHaveLength(1);
+      expect(result.content[0].type).toBe('text');
+      expect(result.content[0].text).toContain('Error getting balance');
+      expect(result.isError).toBe(true);
     });
   });
 });

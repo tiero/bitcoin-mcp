@@ -65,12 +65,12 @@ server.resource('address', 'bitcoin://address', async (uri) => {
       {
         uri: uri.href,
         text:
-          'Here are your Bitcoin wallet addresses for receiving cryptocurrency:\n\n' +
-          '**Onchain Address**\n' +
+          'Here are your Bitcoin wallet addresses:\n\n' +
+          '**Bitcoin Address**\n' +
           '```\n' +
           addresses.onchain +
           '\n```\n\n' +
-          '**Offchain Address**\n' +
+          '**Ark Address**\n' +
           '```\n' +
           addresses.offchain +
           '\n```',

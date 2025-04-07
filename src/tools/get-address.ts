@@ -1,11 +1,11 @@
-import { ToolResponse } from './types.js';
+import { Tool, ToolResponse } from './types.js';
 import { initializeWallet } from '../lib/wallet.js';
 import { getWalletState } from '../lib/state.js';
+import { WalletAddresses } from './schemas.js';
 
-export const tool = {
+export const tool: Tool = {
   name: 'get_address',
-  description:
-    'Get your Bitcoin wallet addresses for receiving cryptocurrency (both onchain and offchain)',
+  description: 'Get Bitcoin and Ark addresses from the wallet',
   handler: async (): Promise<ToolResponse> => {
     try {
       const walletState = getWalletState();
@@ -14,7 +14,7 @@ export const tool = {
           content: [
             {
               type: 'text',
-              text: "Let me check your Bitcoin wallet addresses. I see you haven't set up a wallet yet. Would you like me to help you create one? You can use the setup_wallet tool to get started.",
+              text: "I see you haven't set up a wallet yet. Would you like me to help you create one with the setup_wallet tool?",
             },
           ],
           tools: [
@@ -29,29 +29,43 @@ export const tool = {
       const wallet = await initializeWallet();
       const addresses = await wallet.getAddress();
 
-      // Handle case where offchain is an object with address property
-      const offchainAddress =  addresses.offchain?.address || 'Not available'
+
+      const walletAddresses: WalletAddresses = {
+        bitcoin: {
+          type: 'bitcoin',
+          network: walletState.network,
+          address: addresses.onchain,
+        }
+      };
+
+      if (addresses.offchain !== undefined) {
+        walletAddresses.ark = {
+          type: 'ark',
+          network: walletState.network,
+          address: addresses.offchain.address,
+        }
+      };
+
 
       return {
         content: [
           {
             type: 'text',
             text:
-              'Here are your Bitcoin wallet addresses for receiving cryptocurrency:\n\n' +
-              '**Onchain Address**\n' +
+              'Here are your wallet addresses:\n\n' +
+              '**Bitcoin Address**\n' +
               '```\n' +
-              addresses.onchain +
-              '\n```\n\n' +
-              '**Offchain Address**\n' +
-              '```\n' +
-              offchainAddress +
-              '\n```',
+              walletAddresses.bitcoin.address +
+              '\n```' +
+              (walletAddresses.ark ? '\n\n**Ark Address**\n```\n' +
+              walletAddresses.ark.address +
+              '\n```' : ''),
           },
           {
             type: 'resource',
             resource: {
               uri: 'bitcoin://address',
-              text: JSON.stringify(addresses, null, 2),
+              text: JSON.stringify(walletAddresses, null, 2),
               mimeType: 'application/json',
             },
           },
