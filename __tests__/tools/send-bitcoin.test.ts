@@ -107,7 +107,7 @@ describe('send-bitcoin tool', () => {
     });
 
     expect(result.content[0].text).toBe(
-      'Successfully sent 1000 satoshis to Bitcoin address:\n' +
+      'Successfully sent 1000 satoshis to address:\n' +
       'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx\n\n' +
       'Transaction ID: 1234567890abcdef'
     );
@@ -143,7 +143,7 @@ describe('send-bitcoin tool', () => {
     });
 
     expect(result.content[0].text).toBe(
-      'Successfully sent 1000 satoshis to Bitcoin address:\n' +
+      'Successfully sent 1000 satoshis to address:\n' +
       'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx\n\n' +
       'Transaction ID: 1234567890abcdef'
     );

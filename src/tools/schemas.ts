@@ -68,3 +68,12 @@ export const sendBitcoinSchema = z.object({
   amount: z.number().positive(),
   feeRate: z.number().positive().optional(),
 });
+
+// Payment schema
+export const UnifiedPaymentSchema = z.object({
+  address: z.string().min(1, 'Address cannot be empty'),
+  amount: z.number().int().positive(),
+  feeRate: z.number().positive().optional(),
+});
+
+export type Payment = z.infer<typeof UnifiedPaymentSchema>;

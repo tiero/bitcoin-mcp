@@ -2,33 +2,14 @@ import { z } from 'zod';
 import { Tool } from './types.js';
 import { initializeWallet } from '../lib/wallet.js';
 import { getWalletState } from '../lib/state.js';
+import { UnifiedPaymentSchema } from './schemas.js';
 
-// Payment schemas
-const BitcoinPaymentSchema = z.object({
-  type: z.literal('bitcoin'),
-  address: z.string().min(1, 'Address cannot be empty'),
-  amount: z.number().int().positive(),
-  feeRate: z.number().positive().optional(),
-});
-
-const ArkPaymentSchema = z.object({
-  type: z.literal('ark'),
-  address: z.string().min(1, 'Address cannot be empty'),
-  amount: z.number().int().positive(),
-  feeRate: z.number().positive().optional(),
-});
-
-export const PaymentSchema = z.discriminatedUnion('type', [
-  BitcoinPaymentSchema,
-  ArkPaymentSchema,
-]);
-
-export type Payment = z.infer<typeof PaymentSchema>;
+export type Payment = z.infer<typeof UnifiedPaymentSchema>;
 
 export const sendBitcoin: Tool = {
   name: 'send_bitcoin',
-  description: 'Send Bitcoin to a Bitcoin or Ark address',
-  schema: PaymentSchema,
+  description: 'Send Bitcoin or Ark to a specified address',
+  schema: UnifiedPaymentSchema,
   handler: async ({ params }) => {
     try {
       const walletState = getWalletState();
@@ -45,7 +26,7 @@ export const sendBitcoin: Tool = {
       }
 
       const wallet = await initializeWallet();
-      const payment = PaymentSchema.parse(params);
+      const payment = UnifiedPaymentSchema.parse(params);
 
       // Get current balance first
       const balance = await wallet.getBalance();
@@ -70,13 +51,11 @@ export const sendBitcoin: Tool = {
         feeRate: payment.feeRate,
       });
 
-      const protocolType = payment.type === 'bitcoin' ? 'Bitcoin' : 'Ark';
-      
       return {
         content: [
           {
             type: 'text',
-            text: `Successfully sent ${payment.amount} satoshis to ${protocolType} address:\n` +
+            text: `Successfully sent ${payment.amount} satoshis to address:\n` +
                   `${payment.address}\n\n` +
                   `Transaction ID: ${txid}`,
           },
