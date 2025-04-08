@@ -9,7 +9,7 @@ on:
       - master
 
 jobs:
-  format:
+  build_test_format:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -17,27 +17,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '22'
+      - name: Install pnpm
+        run: npm install -g pnpm
       - run: pnpm install
       - run: pnpm format:check
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-      - run: pnpm install
       - run: pnpm build
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '16'
-      - run: pnpm install
       - run: pnpm test
