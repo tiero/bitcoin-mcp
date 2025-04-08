@@ -1,9 +1,9 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { checkWalletExists } from '../lib/state.js';
-import { Tool, ToolHandler, ToolResponse } from './types.js';
+import { Tool, ToolHandler } from './types.js';
 
 // Import all tools
-import { tool as setupWalletTool } from './wallet.js';
+import { tool as setupWalletTool } from './setup-wallet.js';
 import { tool as getBalanceTool } from './get-balance.js';
 import { tool as sendBitcoinTool } from './send-bitcoin.js';
 import { tool as getAddressTool } from './get-address.js';
