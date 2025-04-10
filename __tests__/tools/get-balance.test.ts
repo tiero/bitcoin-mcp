@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { tool as getBalance, fetchBitcoinPrice } from '../../src/tools/get-balance.js';
+import {
+  tool as getBalance,
+  fetchBitcoinPrice,
+} from '../../src/tools/get-balance.js';
 import * as state from '../../src/lib/state.js';
 import * as wallet from '../../src/lib/wallet.js';
 import type { WalletState } from '../../src/lib/state.js';
@@ -47,7 +50,7 @@ describe('get-balance tool', () => {
     it('should use cached price when fetch fails within cache duration', async () => {
       vi.useFakeTimers();
       const mockPrice = 50000;
-      
+
       // Initial successful fetch
       globalFetch.mockResolvedValueOnce({
         ok: true,
@@ -93,16 +96,18 @@ describe('get-balance tool', () => {
 
       // Mock wallet balance and addresses
       vi.mocked(wallet.initializeWallet).mockResolvedValue({
-        getBalance: () => Promise.resolve({
-          onchain: { total: 1000000 }, // 0.01 BTC
-          offchain: { total: 500000 }, // 0.005 BTC
-        }),
-        getAddress: () => Promise.resolve({
-          onchain: 'bc1qxxx',
-          offchain: {
-            address: 'lnxxx',
-          },
-        }),
+        getBalance: () =>
+          Promise.resolve({
+            onchain: { total: 1000000 }, // 0.01 BTC
+            offchain: { total: 500000 }, // 0.005 BTC
+          }),
+        getAddress: () =>
+          Promise.resolve({
+            onchain: 'bc1qxxx',
+            offchain: {
+              address: 'lnxxx',
+            },
+          }),
       } as any);
 
       // Mock Bitcoin price
@@ -115,7 +120,9 @@ describe('get-balance tool', () => {
 
       expect(result.content).toHaveLength(1);
       expect(result.content[0].type).toBe('text');
-      expect(result.content[0].text).toContain('Your wallet balance is: 0.01500000 BTC'); // Total balance
+      expect(result.content[0].text).toContain(
+        'Your wallet balance is: 0.01500000 BTC'
+      ); // Total balance
       expect(result.content[0].text).toContain('Bitcoin Balance: 0.01 BTC'); // Bitcoin balance
       expect(result.content[0].text).toContain('Ark Balance: 0.005 BTC'); // Ark balance
       expect(result.content[0].text).toContain('$750.00 USD'); // Fiat value
@@ -135,12 +142,14 @@ describe('get-balance tool', () => {
 
       // Mock wallet balance and addresses without offchain
       vi.mocked(wallet.initializeWallet).mockResolvedValue({
-        getBalance: () => Promise.resolve({
-          onchain: { total: 1000000 }, // 0.01 BTC
-        }),
-        getAddress: () => Promise.resolve({
-          onchain: 'bc1qxxx',
-        }),
+        getBalance: () =>
+          Promise.resolve({
+            onchain: { total: 1000000 }, // 0.01 BTC
+          }),
+        getAddress: () =>
+          Promise.resolve({
+            onchain: 'bc1qxxx',
+          }),
       } as any);
 
       // Mock Bitcoin price
@@ -153,7 +162,9 @@ describe('get-balance tool', () => {
 
       expect(result.content).toHaveLength(1);
       expect(result.content[0].type).toBe('text');
-      expect(result.content[0].text).toContain('Your wallet balance is: 0.01000000 BTC'); // Total balance
+      expect(result.content[0].text).toContain(
+        'Your wallet balance is: 0.01000000 BTC'
+      ); // Total balance
       expect(result.content[0].text).toContain('Bitcoin Balance: 0.01 BTC'); // Bitcoin balance
       expect(result.content[0].text).not.toContain('Ark Balance'); // No Ark balance
       expect(result.content[0].text).toContain('$500.00 USD'); // Fiat value
@@ -189,7 +200,9 @@ describe('get-balance tool', () => {
       } satisfies WalletState);
 
       // Mock wallet initialization error
-      vi.mocked(wallet.initializeWallet).mockRejectedValue(new Error('Test error'));
+      vi.mocked(wallet.initializeWallet).mockRejectedValue(
+        new Error('Test error')
+      );
 
       const result = (await getBalance.handler({})) as ToolResponse;
 

@@ -84,7 +84,8 @@ export async function initializeWallet(
     identity,
     esploraUrl: 'https://mutinynet.com/api',
     arkServerUrl: 'https://mutinynet.arkade.sh',
-    arkServerPublicKey: 'fa73c6e4876ffb2dfc961d763cca9abc73d4b88efcb8f5e7ff92dc55e9aa553d'
+    arkServerPublicKey:
+      'fa73c6e4876ffb2dfc961d763cca9abc73d4b88efcb8f5e7ff92dc55e9aa553d',
   });
 
   return wallet;

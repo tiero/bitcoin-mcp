@@ -1,7 +1,12 @@
 import { z } from 'zod';
 
 // Network type
-export const NetworkSchema = z.enum(['bitcoin', 'testnet', 'signet', 'mutinynet']);
+export const NetworkSchema = z.enum([
+  'bitcoin',
+  'testnet',
+  'signet',
+  'mutinynet',
+]);
 
 // Address schemas
 export const BitcoinAddressSchema = z.object({
@@ -30,14 +35,18 @@ export const BalanceResponseSchema = z.object({
     address: BitcoinAddressSchema,
     balance: z.number(),
   }),
-  ark: z.object({
-    address: ArkAddressSchema,
-    balance: z.number(),
-  }).optional(),
-  fiat: z.object({
-    usd: z.number(),
-    timestamp: z.number(),
-  }).optional(),
+  ark: z
+    .object({
+      address: ArkAddressSchema,
+      balance: z.number(),
+    })
+    .optional(),
+  fiat: z
+    .object({
+      usd: z.number(),
+      timestamp: z.number(),
+    })
+    .optional(),
 });
 
 // Tool schemas
@@ -58,9 +67,11 @@ export const getAddressesSchema = z.object({
 });
 
 export const getBalanceSchema = z.object({
-  params: z.object({
-    fiat: z.enum(['USD', 'EUR', 'GBP']).optional(),
-  }).optional(),
+  params: z
+    .object({
+      fiat: z.enum(['USD', 'EUR', 'GBP']).optional(),
+    })
+    .optional(),
 });
 
 export const sendBitcoinSchema = z.object({

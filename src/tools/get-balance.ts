@@ -34,7 +34,7 @@ export async function fetchBitcoinPrice(): Promise<number | null> {
     if (!process.env.VITEST) {
       console.error('Error fetching BTC price:', error);
     }
-    
+
     if (priceCache && Date.now() - priceCache.timestamp < CACHE_DURATION) {
       return priceCache.usd;
     }
@@ -47,19 +47,28 @@ export async function fetchBitcoinPrice(): Promise<number | null> {
 export const tool: Tool = {
   name: 'get_balance',
   description: 'Get your wallet balance in Bitcoin and Ark',
-  schema: z.object({
-    fiat: z.enum(['USD', 'EUR', 'GBP']).optional(),
-  }).optional(),
+  schema: z
+    .object({
+      fiat: z.enum(['USD', 'EUR', 'GBP']).optional(),
+    })
+    .optional(),
   handler: async ({ params }) => {
     try {
       const walletState = getWalletState();
       if (!walletState.initialized) {
         return {
-          content: [{ 
-            type: 'text', 
-            text: "I see you haven't set up a wallet yet. Would you like me to help you create one with the setup_wallet tool?"
-          }],
-          tools: [{ name: 'setup_wallet', description: 'Create or restore a Bitcoin wallet' }],
+          content: [
+            {
+              type: 'text',
+              text: "I see you haven't set up a wallet yet. Would you like me to help you create one with the setup_wallet tool?",
+            },
+          ],
+          tools: [
+            {
+              name: 'setup_wallet',
+              description: 'Create or restore a Bitcoin wallet',
+            },
+          ],
         };
       }
 
@@ -74,7 +83,7 @@ export const tool: Tool = {
           type: 'bitcoin',
           network: walletState.network,
           address: addresses.onchain,
-        }
+        },
       };
 
       if (addresses.offchain !== undefined) {
@@ -82,10 +91,12 @@ export const tool: Tool = {
           type: 'ark',
           network: walletState.network,
           address: addresses.offchain.address,
-        }
+        };
       }
 
-      const total = BigInt(balance.onchain.total + (balance.offchain?.total || 0));
+      const total = BigInt(
+        balance.onchain.total + (balance.offchain?.total || 0)
+      );
       const onchain = BigInt(balance.onchain.total);
       const offchain = BigInt(balance.offchain?.total || 0);
 
@@ -94,7 +105,7 @@ export const tool: Tool = {
         bitcoin: {
           address: walletAddresses.bitcoin,
           balance: Number(onchain),
-        }
+        },
       };
 
       if (walletAddresses.ark) {
@@ -114,27 +125,38 @@ export const tool: Tool = {
 
       // Convert satoshis to BTC using BigInt
       const btcAmount = `${total / POW_8}.${(total % POW_8).toString().padStart(8, '0')}`;
-      const fiatStr = response.fiat ? ` (approximately $${(response.fiat.usd * Number(total) / Number(POW_8)).toFixed(2)} USD)` : '';
-      
+      const fiatStr = response.fiat
+        ? ` (approximately $${((response.fiat.usd * Number(total)) / Number(POW_8)).toFixed(2)} USD)`
+        : '';
+
       return {
-        content: [{
-          type: 'text',
-          text: `Your wallet balance is: ${btcAmount} BTC${fiatStr}\n\n` +
-                `Bitcoin Balance: ${Number(onchain) / Number(POW_8)} BTC\n` +
-                (response.ark ? `Ark Balance: ${Number(offchain) / Number(POW_8)} BTC\n` : '') +
-                `This is testnet Bitcoin on the Mutinynet network, which isn't real Bitcoin that can be exchanged for actual currency.`
-        }],
-        resources: [{
-          uri: `bitcoin://balance`,
-          description: 'Wallet Balance',
-        }],
+        content: [
+          {
+            type: 'text',
+            text:
+              `Your wallet balance is: ${btcAmount} BTC${fiatStr}\n\n` +
+              `Bitcoin Balance: ${Number(onchain) / Number(POW_8)} BTC\n` +
+              (response.ark
+                ? `Ark Balance: ${Number(offchain) / Number(POW_8)} BTC\n`
+                : '') +
+              `This is testnet Bitcoin on the Mutinynet network, which isn't real Bitcoin that can be exchanged for actual currency.`,
+          },
+        ],
+        resources: [
+          {
+            uri: `bitcoin://balance`,
+            description: 'Wallet Balance',
+          },
+        ],
       };
     } catch (error) {
       return {
-        content: [{ 
-          type: 'text', 
-          text: `Error getting balance: ${error instanceof Error ? error.message : 'Unknown error'}` 
-        }],
+        content: [
+          {
+            type: 'text',
+            text: `Error getting balance: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          },
+        ],
         isError: true,
       };
     }

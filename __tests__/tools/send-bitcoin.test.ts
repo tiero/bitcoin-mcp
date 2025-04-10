@@ -81,7 +81,9 @@ describe('send-bitcoin tool', () => {
     } as any);
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toBe('Insufficient balance. You have 500 satoshis, but trying to send 1000 satoshis.');
+    expect(result.content[0].text).toBe(
+      'Insufficient balance. You have 500 satoshis, but trying to send 1000 satoshis.'
+    );
   });
 
   it('should send bitcoin successfully', async () => {
@@ -108,8 +110,8 @@ describe('send-bitcoin tool', () => {
 
     expect(result.content[0].text).toBe(
       'Successfully sent 1000 satoshis to address:\n' +
-      'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx\n\n' +
-      'Transaction ID: 1234567890abcdef'
+        'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx\n\n' +
+        'Transaction ID: 1234567890abcdef'
     );
     expect(result.resources).toEqual([
       {
@@ -144,8 +146,8 @@ describe('send-bitcoin tool', () => {
 
     expect(result.content[0].text).toBe(
       'Successfully sent 1000 satoshis to address:\n' +
-      'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx\n\n' +
-      'Transaction ID: 1234567890abcdef'
+        'tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx\n\n' +
+        'Transaction ID: 1234567890abcdef'
     );
   });
 
@@ -164,7 +166,10 @@ describe('send-bitcoin tool', () => {
       "I see you haven't set up a wallet yet. Would you like me to help you create one with the setup_wallet tool?"
     );
     expect(result.tools).toEqual([
-      { name: 'setup_wallet', description: 'Create or restore a Bitcoin wallet' },
+      {
+        name: 'setup_wallet',
+        description: 'Create or restore a Bitcoin wallet',
+      },
     ]);
   });
 });

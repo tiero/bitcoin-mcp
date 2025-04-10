@@ -43,7 +43,7 @@ describe('get-address tool', () => {
 
     // Check response content
     expect(result.content).toHaveLength(2);
-    
+
     // Check text content
     const textContent = result.content[0];
     expect(textContent.type).toBe('text');
@@ -65,7 +65,7 @@ describe('get-address tool', () => {
           type: 'ark',
           network: 'mutinynet',
           address: 'lnxxx',
-        }
+        },
       });
       expect(resourceContent.resource.mimeType).toBe('application/json');
       expect(resourceContent.resource.uri).toBe('bitcoin://address');
@@ -93,7 +93,7 @@ describe('get-address tool', () => {
 
     // Check response content
     expect(result.content).toHaveLength(2);
-    
+
     // Check text content
     const textContent = result.content[0];
     expect(textContent.type).toBe('text');
@@ -110,7 +110,7 @@ describe('get-address tool', () => {
           type: 'bitcoin',
           network: 'mutinynet',
           address: 'bc1qxxx',
-        }
+        },
       });
       expect(addresses.ark).toBeUndefined();
       expect(resourceContent.resource.mimeType).toBe('application/json');

@@ -29,13 +29,12 @@ export const tool: Tool = {
       const wallet = await initializeWallet();
       const addresses = await wallet.getAddress();
 
-
       const walletAddresses: WalletAddresses = {
         bitcoin: {
           type: 'bitcoin',
           network: walletState.network,
           address: addresses.onchain,
-        }
+        },
       };
 
       if (addresses.offchain !== undefined) {
@@ -43,9 +42,8 @@ export const tool: Tool = {
           type: 'ark',
           network: walletState.network,
           address: addresses.offchain.address,
-        }
-      };
-
+        };
+      }
 
       return {
         content: [
@@ -57,9 +55,11 @@ export const tool: Tool = {
               '```\n' +
               walletAddresses.bitcoin.address +
               '\n```' +
-              (walletAddresses.ark ? '\n\n**Ark Address**\n```\n' +
-              walletAddresses.ark.address +
-              '\n```' : ''),
+              (walletAddresses.ark
+                ? '\n\n**Ark Address**\n```\n' +
+                  walletAddresses.ark.address +
+                  '\n```'
+                : ''),
           },
           {
             type: 'resource',

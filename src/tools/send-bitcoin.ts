@@ -21,7 +21,12 @@ export const sendBitcoin: Tool = {
               text: "I see you haven't set up a wallet yet. Would you like me to help you create one with the setup_wallet tool?",
             },
           ],
-          tools: [{ name: 'setup_wallet', description: 'Create or restore a Bitcoin wallet' }],
+          tools: [
+            {
+              name: 'setup_wallet',
+              description: 'Create or restore a Bitcoin wallet',
+            },
+          ],
         };
       }
 
@@ -55,9 +60,10 @@ export const sendBitcoin: Tool = {
         content: [
           {
             type: 'text',
-            text: `Successfully sent ${payment.amount} satoshis to address:\n` +
-                  `${payment.address}\n\n` +
-                  `Transaction ID: ${txid}`,
+            text:
+              `Successfully sent ${payment.amount} satoshis to address:\n` +
+              `${payment.address}\n\n` +
+              `Transaction ID: ${txid}`,
           },
         ],
         resources: [
